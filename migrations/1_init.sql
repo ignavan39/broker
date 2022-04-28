@@ -1,32 +1,63 @@
 create extension if not exists "uuid-ossp";
 
 CREATE TABLE users (
-    email text not null,
-    password text not null,
-    first_name text not null,
-    last_name text not null,
-    id uuid not null default uuid_generate_v4() constraint user_pk primary key
+    id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT user_pk PRIMARY KEY,
+    email TEXT NOT NULL,
+    nickname TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL
 );
 
-create unique index user_email_idx on users(email);
+CREATE UNIQUE INDEX user_email_idx ON users(email);
+CREATE UNIQUE INDEX user_nickname_idx ON users(nickname);
 
-CREATE TABLE chats (
-    id uuid not null primary key,
-    created_at timestamp not null default NOW()
+CREATE TABLE workspaces (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT workspace_pk PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    is_private BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE user_chats (
-    id uuid not null default uuid_generate_v4() primary key,
-    user_id uuid not null constraint user_chat_id references users(id),
-    chat_id uuid not null constraint chat_user_id references chats(id),
-    is_blocked boolean default false
+CREATE TYPE workspace_access_type AS ENUM (
+    'ADMIN',
+    'USER'
 );
+
+CREATE TABLE workspace_accesses (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT workspace_access_pk PRIMARY KEY,
+    workspace_id uuid NOT NULL CONSTRAINT used_id_fk REFERENCES users(id),
+    email TEXT NOT NULL,
+    "type" workspace_access_type NOT NULL DEFAULT 'USER'
+);
+
+CREATE UNIQUE INDEX user_workspace_access_idx ON workspace_accesses(email, workspace_id);
+
+CREATE TABLE peers (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT peer_pk PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    workspace_id uuid NOT NULL CONSTRAINT peer_workspace_id_fk REFERENCES workspaces(id)
+);
+
+CREATE TABLE user_peers (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT user_peers_pk PRIMARY KEY,
+    user_id uuid NOT NULL CONSTRAINT user_peers_user_id_fk REFERENCES users(id),
+    peer_id uuid NOT NULL CONSTRAINT user_peers_peer_id_fk REFERENCES peers(id),
+    is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX user_peers_id_idx ON user_peers(user_id, peer_id);
+
 CREATE TABLE messages (
-    created_at timestamp not null default NOW(),
-    id uuid not null default uuid_generate_v4() primary key,
-    text text,
-    forwards jsonb default '[]',
-    images jsonb default '[]',
-    sender_id uuid not null constraint user_id references users(id),
-    chat_id uuid not null constraint chat_id references chats(id)
+    id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT messages_pk PRIMARY KEY,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP DEFAULT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    user_id uuid NOT NULL CONSTRAINT messages_user_id_fk REFERENCES users(id),
+    peer_id uuid NOT NULL CONSTRAINT messages_peer_id_fk REFERENCES peers(id),
+    "text" TEXT NOT NULL,
+    parent_id uuid DEFAULT NULL CONSTRAINT messages_parent_fk REFERENCES messages(id)
 );
