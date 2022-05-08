@@ -1,0 +1,15 @@
+{
+  "name": "calendar",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start:calendar:dev": "ts-node apps/calendar/index.ts",
+    "build": "tsc",
+    "start:calendar:prod": "node ./dist/apps/calendar/index.js"
+  },
+  "dependencies": {
+    "googleapis": "39",
+    "typescript": "^4.6.4"
+  }
+}
