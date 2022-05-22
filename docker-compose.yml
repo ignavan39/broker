@@ -42,6 +42,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASS:-user}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
     ports:
       - '5432:5432'
     healthcheck:
@@ -63,7 +64,7 @@ services:
 
   calendar:
     environment: 
-      NODE_ENV: production
+      NODE_ENV: develop
     container_name: calendar_app
     depends_on:
       - postgres
@@ -71,7 +72,7 @@ services:
       context: .
       dockerfile: ./docker/app.dockerfile
     ports:
-     - 8080:8080
+     - 8085:8080
     networks:
       calendar:
         ipv4_address: 171.4.4.12

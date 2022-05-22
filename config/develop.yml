@@ -1,0 +1,9 @@
+calendar:
+  database:
+    password: "user"
+    user: "user"
+    name: "calendar_db"
+    host: "postgres.calendar.loc"
+    port: 5432
+  jwt:
+    secret: "super_secret"
