@@ -4,13 +4,12 @@ WORKDIR /.
 
 ARG project
 
-
-COPY ./backend/go.mod ./
-COPY ./backend/go.sum ./
+COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
 RUN go mod verify
 
-COPY ./backend/ ./app
+COPY . ./app/
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o app ./app/cmd/${project}/main.go
 

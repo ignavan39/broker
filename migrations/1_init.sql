@@ -1,28 +1,37 @@
 create extension if not exists "uuid-ossp";
 
-create table users (
+CREATE TABLE users (
     email text not null,
     password text not null,
+    name text,
     id uuid not null default uuid_generate_v4() constraint user_pk primary key
 );
 
 create unique index user_email_idx on users(email);
 
-create table events (
-    id uuid not null default uuid_generate_v4() constraint event_pk primary key,
-    summary text not null,
-    description text,
-    start_date timestamp not null,
-    end_date timestamp,
-    time_zone text default 'Europe/Moscow'
+CREATE TABLE messages (
+    created_at timestamp not null default NOW(),
+    id uuid not null primary key,
+    text text,
+    forwards jsonb default '[]',
+    images jsonb default '[]',
+    sender_id uuid not null constraint user_id references users(id),
+    chat_id uuid not null constraint chat_id references chats(id)
 );
 
-create type remind_type as enum ('tg', 'vk', 'email', 'google_calendar_popup');
-
-create table reminds (
-    id uuid not null default uuid_generate_v4() constraint reminds_pk primary key,
-    type remind_type not null,
-    event_id uuid constraint reminds_events_fk references events (id)
+CREATE TABLE chats (
+    id uuid not null primary key,
+    created_at timestamp not null default NOW()
 );
 
-create unique index reminds_events_idx on reminds(type, event_id);
+CREATE TABLE user_chats (
+    id uuid not null primary key,
+    user_id uuid not null constraint user_chat_id references users(id),
+    chat_id uuid not null constraint chat_user_id references chats(id),
+    is_blocked boolean default false
+);
+CREATE TABLE user_chats (
+    id uuid not null primary key,
+    user_id uuid not null constraint user_chat_id references users(id),
+    chat_id uuid not null constraint chat_user_id references chats(id),
+);

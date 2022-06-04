@@ -4,7 +4,7 @@ volumes:
 
 services:
   postgres:
-    container_name: postgres_calendar
+    container_name: postgres_broker
     image: postgres:11.13-alpine
     command:
       - 'postgres'
@@ -37,7 +37,7 @@ services:
       - '-c'
       - 'pg_stat_statements.track=all'
     environment:
-      POSTGRES_DB: ${DATABASE_NAME:-calendar_db}
+      POSTGRES_DB: ${DATABASE_NAME:-broker_db}
       POSTGRES_USER: ${DATABASE_USER:-user}
       POSTGRES_PASSWORD: ${DATABASE_PASS:-user}
     volumes:
@@ -46,7 +46,7 @@ services:
     ports:
       - '5432:5432'
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER:-user} -d ${DATABASE_NAME:-calendar_db}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER:-user} -d ${DATABASE_NAME:-broker_db}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,31 +57,49 @@ services:
           cpus: '1'
           memory: 4G
     networks:
-      calendar:
+      broker:
         ipv4_address: 171.4.4.11
         aliases:
-          - postgres.calendar.loc
+          - postgres.broker.loc
 
-  calendar:
-    container_name: calendar_app
+  frontend:
+    hostname: "broker-frontend"
+    build:
+      context: ./
+      dockerfile: docker/frontend.dockerfile
+    ports:
+      - 3000:80
+    networks:
+      broker:
+        ipv4_address: 171.4.4.13
+        aliases:
+          - broker.api.frontend.loc
+
+  broker-core:
+    container_name: broker
     depends_on:
       - postgres
-    build: 
+    build:
       args:
-        - project=calendar
+        - project=core
       context: .
-      dockerfile: ./docker/app.dockerfile
+      dockerfile: ./docker/app.local.dockerfile
+    volumes:
+      - ./app:/srv/app/app:ro
+      - ./cmd:/srv/core/cmd:ro 
     ports:
-     - 8085:8080
+     - 8085:${PORT:-8080}
+    env_file:
+      - .env
     networks:
-      calendar:
+      broker:
         ipv4_address: 171.4.4.12
         aliases:
-          - app.calendar.loc
+          - app.broker.loc
   
 networks:
-  calendar:
-    name: calendar
+  broker:
+    name: broker
     ipam:
       config:
         - subnet: "171.4.4.0/24"
