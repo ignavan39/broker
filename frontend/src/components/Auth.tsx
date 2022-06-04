@@ -16,9 +16,9 @@ const Container = styled.div`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  width: 400px;
+  width: 23rem;
   justify-content: space-between;
-  height: 300px;
+  min-height: 400px;
   border-radius: 10px;
   border: 1px solid #4caf50;
 `;
@@ -35,7 +35,7 @@ const Header = styled.div`
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  font-size: 20px;
+  font-size: 2rem;
   color: white;
   height: 4rem;
   border-radius: 10px 10px 0 0;
@@ -46,14 +46,14 @@ const Button = styled.button`
   background-color: #4caf50;
   border: none;
   color: white;
-  padding: 15px 32px;
+  padding: 1rem 2rem;
   text-align: center;
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
-  min-width: auto;
-  margin: 0.5rem 1rem;
-  min-height: 2.5rem;
+  min-width: 9rem;
+  margin: 0.2rem 1rem;
+  min-height: 1rem;
   border-radius: 10px;
   &:hover {
     background-color: #4aaf90;
@@ -66,17 +66,30 @@ const Input = styled.input`
   border-radius: 10px;
   padding: 0 10px;
   min-width: auto;
-  min-height: 3rem;
   font-size: 16px;
   text-align: center;
   margin: 0.2rem 0;
 `;
 
-export const Auth = () => {
+const FormButton = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  min-width: 100%;
+  margin: 0.2rem 0;
+`;
+
+type AuthProp = {
+  register: boolean;
+};
+
+export const Auth = (prop: AuthProp) => {
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
     password: user.password ?? "",
     email: user.email ?? "",
+    firstName: !prop.register ? user.firstName ?? "" : "",
+    lastName: !prop.register ? user.lastName ?? "" : "",
   });
   const navigate = useNavigate();
 
@@ -92,8 +105,7 @@ export const Auth = () => {
     e.preventDefault();
     const newUser: User = {
       ...user,
-      email: state.email,
-      password: state.password,
+      ...state,
       auth: {
         accessToken: Math.random().toString(),
         expiresAt: new Date(),
@@ -106,7 +118,7 @@ export const Auth = () => {
   return (
     <Container>
       <Form onSubmit={onSubmit}>
-        <Header>Login</Header>
+        {prop.register ? <Header>Register</Header> : <Header>Login</Header>}
         <FormInput>
           <Input
             type={"email"}
@@ -123,8 +135,44 @@ export const Auth = () => {
             value={state.password}
             name="password"
           />
+          {prop.register ? (
+            <>
+              <Input
+                type={"text"}
+                minLength={1}
+                placeholder="First Name"
+                onInput={handleInput}
+                value={state.firstName}
+                name="firstName"
+              />
+              <Input
+                type={"text"}
+                minLength={1}
+                placeholder="Last Name"
+                onInput={handleInput}
+                value={state.lastName}
+                name="lastName"
+              />
+            </>
+          ) : (
+            <></>
+          )}
         </FormInput>
-        <Button>Submit</Button>
+        <FormButton>
+          <Button>Submit</Button>
+          {!prop.register ? (
+            <Button
+              style={{ backgroundColor: "#ff9900" }}
+              onClick={() => {
+                navigate("/register");
+              }}
+            >
+              Registration
+            </Button>
+          ) : (
+            <></>
+          )}
+        </FormButton>
       </Form>
     </Container>
   );

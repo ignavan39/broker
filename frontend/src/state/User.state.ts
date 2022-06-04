@@ -6,7 +6,8 @@ const getDefaultUser = (): User => {
   if (!cache) {
     return {
       email: "",
-      name: "",
+      firstName: "",
+      lastName: "",
       auth: {
         expiresAt: null,
         accessToken: "",

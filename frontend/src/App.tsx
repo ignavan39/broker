@@ -11,7 +11,8 @@ const BaseRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth" element={<Auth register={false} />} />
+        <Route path="/register" element={<Auth register={true} />} />
         <Route path="*" element={isLoggined? <Home/> : <Navigate to='/' />} />
         <Route path="/" element={isLoggined? <Home/> : <Navigate to='/auth' />} />
       </Routes>
