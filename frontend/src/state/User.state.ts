@@ -1,7 +1,7 @@
 import { atom, selector } from "recoil";
 import { User } from "../types/User";
 
-const getDefaultUser = () => {
+const getDefaultUser = (): User => {
   const cache = localStorage.getItem("user");
   if (!cache) {
     return {
@@ -11,6 +11,7 @@ const getDefaultUser = () => {
         expiresAt: null,
         accessToken: "",
       },
+      password: '',
     };
   } else {
     return JSON.parse(cache) as User;
