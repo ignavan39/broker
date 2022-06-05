@@ -3,12 +3,13 @@ package repository
 import (
 	"broker/app/models"
 	"broker/pkg/pg"
+
 	sq "github.com/Masterminds/squirrel"
 )
 
-type UserRepository interface{
+type UserRepository interface {
 	Create(email string, password string) (*models.User, error)
-} 
+}
 
 type UserRepositoryImpl struct {
 	pool pg.Pool
@@ -30,7 +31,7 @@ func (r *UserRepositoryImpl) Create(email string, password string) (*models.User
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	if err := row.Scan(&user.Id, &user.Password, &user.Email); err != nil {
+	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName); err != nil {
 		return nil, err
 	}
 
