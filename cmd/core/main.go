@@ -12,26 +12,25 @@ import (
 	"syscall"
 )
 
-
-func main(){
+func main() {
 	ctx := context.Background()
 	if err := config.Init(); err != nil {
 		log.Fatalln(err)
 	}
 
 	conf := config.GetConfig()
-	log.Printf("read config %v",conf)
-	
-	pgConn,err := pg.NewReadAndWriteConnection(ctx,conf.Database,conf.Database,nil)
+	log.Printf("read config %v", conf)
+
+	pgConn, err := pg.NewReadAndWriteConnection(ctx, conf.Database, conf.Database, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println("Database connection established")
-	
+
 	// TODO remove after using
 	pgConn.Write()
 
-	web := api.NewAPIServer(fmt.Sprintf("%d",conf.Port))
+	web := api.NewAPIServer(fmt.Sprintf("%d", conf.Port))
 	if err := web.Start(); err != nil {
 		log.Fatal(err)
 	}
