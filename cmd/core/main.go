@@ -2,14 +2,19 @@ package main
 
 import (
 	"broker/app/api"
+	"broker/app/api/user"
 	"broker/app/config"
+	"broker/app/repository"
+	"broker/app/services"
 	"broker/pkg/pg"
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/go-chi/chi"
 )
 
 func main() {
@@ -27,14 +32,19 @@ func main() {
 	}
 	log.Println("Database connection established")
 
-	// TODO remove after using
-	pgConn.Write()
+	web := api.NewAPIServer(":80")
 
-	web := api.NewAPIServer(fmt.Sprintf("%d", conf.Port))
+
+	authService := services.NewAuthService([]byte("123"), time.Duration(600))
+	userRepo := repository.NewUserRepository(pgConn)
+	userController := user.NewController(authService, userRepo)
+	web.Router().Route("/api/v1", func(v1 chi.Router) {
+		user.RegisterRouter(v1, userController)
+	})
+
 	if err := web.Start(); err != nil {
 		log.Fatal(err)
 	}
-
 	appCloser := make(chan os.Signal)
 	signal.Notify(appCloser, os.Interrupt, syscall.SIGTERM)
 	go func() {

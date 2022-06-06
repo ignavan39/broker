@@ -9,9 +9,9 @@ COPY go.sum ./
 RUN go mod download
 RUN go mod verify
 
-COPY . ./app/
+COPY . ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o app ./app/cmd/${project}/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o app ./cmd/${project}/main.go
 
 WORKDIR /
 FROM alpine:3.14

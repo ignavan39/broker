@@ -83,12 +83,12 @@ services:
       args:
         - project=core
       context: .
-      dockerfile: ./docker/app.local.dockerfile
+      dockerfile: ./docker/app.dockerfile
     volumes:
       - ./app:/srv/app/app:ro
       - ./cmd:/srv/core/cmd:ro 
     ports:
-     - 8085:${PORT:-8080}
+     - ${PORT:-8080}:80
     env_file:
       - .env
     networks:

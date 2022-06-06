@@ -8,7 +8,7 @@ import (
 )
 
 type UserRepository interface {
-	Create(email string, password string) (*models.User, error)
+	Create(email string, password string, lastName string, firstName string) (*models.User, error)
 }
 
 type UserRepositoryImpl struct {
@@ -21,13 +21,13 @@ func NewUserRepository(pool pg.Pool) *UserRepositoryImpl {
 	}
 }
 
-func (r *UserRepositoryImpl) Create(email string, password string) (*models.User, error) {
+func (r *UserRepositoryImpl) Create(email string, password string, lastName string, firstName string) (*models.User, error) {
 	user := &models.User{}
 
 	row := sq.Insert("users").
-		Columns("password", "email").
-		Values(password, email).
-		Suffix("returning id, password, email").
+		Columns("password", "email", "first_name", "last_name").
+		Values(password, email, firstName, lastName).
+		Suffix("returning id, password, email, first_name,last_name").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()

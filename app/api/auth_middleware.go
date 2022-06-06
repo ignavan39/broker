@@ -1,6 +1,7 @@
 package api
 
 import (
+	"broker/app/types"
 	"context"
 	"net/http"
 	"strings"
@@ -9,26 +10,6 @@ import (
 
 	blogger "github.com/sirupsen/logrus"
 )
-
-
-type Claims struct {
-	jwt.StandardClaims
-	Id string `json:"id"`
-}
-
-type ContextUseType = string
-
-const ContextUserKey ContextUseType = "user"
-
-func GetUserIdFromContext(ctx context.Context) string {
-	userId, ok := ctx.Value(ContextUserKey).(string)
-	if !ok {
-		return ""
-	}
-
-	return userId
-}
-
 
 type AuthGuard struct {
 	signingKey string
@@ -50,7 +31,7 @@ func (ag *AuthGuard) Next() func(next http.Handler) http.Handler {
 				return
 			} else {
 				jwtToken := authHeader[1]
-				customClaims := &Claims{}
+				customClaims := &types.Claims{}
 
 				token, err := jwt.ParseWithClaims(jwtToken, customClaims, func(token *jwt.Token) (interface{}, error) {
 					return []byte(ag.signingKey), nil
@@ -62,7 +43,7 @@ func (ag *AuthGuard) Next() func(next http.Handler) http.Handler {
 					return
 				}
 
-				ctx := context.WithValue(r.Context(), ContextUserKey, customClaims.Id)
+				ctx := context.WithValue(r.Context(), types.ContextUserKey, customClaims.Id)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			}
 		})

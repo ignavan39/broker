@@ -7,22 +7,21 @@ import (
 	"strconv"
 )
 
+type JWTConfig struct {
+	HashSalt string `env:"HASH_SALT"`
+}
 
 type Config struct {
-	Database    pg.Config
-	Port        int `env:"PORT"`}
+	JWT      JWTConfig
+	Database pg.Config
+}
 
 var config = Config{}
 
-func Init() (error) {
+func Init() error {
 	dbPort, err := strconv.ParseInt(os.Getenv("DATABASE_PORT"), 10, 16)
 	if err != nil {
-		return fmt.Errorf("error for parsing DATABASE_PORT :%s",err)
-	}
-	
-	port,err := strconv.ParseInt(os.Getenv("PORT"), 10, 16)
-	if err != nil {
-		return fmt.Errorf("error for parsing PORT :%s",err)
+		return fmt.Errorf("error for parsing DATABASE_PORT :%s", err)
 	}
 
 	pgCong := pg.Config{
@@ -32,10 +31,14 @@ func Init() (error) {
 		Port:     uint16(dbPort),
 		DB:       os.Getenv("DATABASE_NAME"),
 	}
-	
+
+	jwt := JWTConfig{
+		HashSalt: os.Getenv("HASH_SALT"),
+	}
+
 	config = Config{
 		Database: pgCong,
-		Port: int(port),
+		JWT:      jwt,
 	}
 	return nil
 }
