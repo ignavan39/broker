@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 type JWTConfig struct {
 	HashSalt string `env:"HASH_SALT"`
+	SigningKey string `env:"SIGNING_KEY"`
+	ExpireDuration time.Duration `env:"EXPIRE_DURATION"`
 }
 
 type Config struct {
@@ -32,8 +35,16 @@ func Init() error {
 		DB:       os.Getenv("DATABASE_NAME"),
 	}
 
+	expireDurationRaw := os.Getenv("EXPIRE_DURATION")
+	expireDuration,err := time.ParseDuration(expireDurationRaw)
+	if err != nil {
+		return fmt.Errorf("error for parsing EXPIRE_DURATION :%s", err)
+	}
+
 	jwt := JWTConfig{
 		HashSalt: os.Getenv("HASH_SALT"),
+		SigningKey: os.Getenv("SIGNING_KEY"),
+		ExpireDuration: expireDuration,
 	}
 
 	config = Config{

@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/go-chi/chi"
 )
@@ -31,11 +30,9 @@ func main() {
 		log.Fatalln(err)
 	}
 	log.Println("Database connection established")
-
 	web := api.NewAPIServer(":80")
 
-
-	authService := services.NewAuthService([]byte("123"), time.Duration(600))
+	authService := services.NewAuthService([]byte(conf.JWT.SigningKey), conf.JWT.ExpireDuration)
 	userRepo := repository.NewUserRepository(pgConn)
 	userController := user.NewController(authService, userRepo)
 	web.Router().Route("/api/v1", func(v1 chi.Router) {
