@@ -9,7 +9,6 @@ const getDefaultUser = (): User => {
       firstName: "",
       lastName: "",
       auth: {
-        expiresAt: null,
         accessToken: "",
       },
       password: '',

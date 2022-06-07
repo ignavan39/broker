@@ -64,7 +64,6 @@ export const Navbar = () => {
     setUser({
       ...user,
       auth: {
-        expiresAt: null,
         accessToken: "",
       },
     });

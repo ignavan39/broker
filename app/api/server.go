@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/rs/cors"
 )
 
 type Server struct {
@@ -25,6 +26,12 @@ func NewAPIServer(listenOn string) *Server {
 }
 func (a *Server) Router() chi.Router {
 	return a.router
+}
+
+func (a *Server) WithCors() *Server {
+	corsHandler := cors.AllowAll()
+	a.router.Use(corsHandler.Handler)
+	return a
 }
 
 func (a *Server) Start() error {

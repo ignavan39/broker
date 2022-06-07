@@ -1,5 +1,5 @@
 export type User = {
-  auth: { accessToken: string; expiresAt: Date | null };
+  auth: { accessToken: string };
   firstName: string,
   lastName: string,
   email: string;

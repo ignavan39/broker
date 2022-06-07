@@ -30,7 +30,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	log.Println("Database connection established")
-	web := api.NewAPIServer(":80")
+	web := api.NewAPIServer(":80").WithCors()
 
 	authService := services.NewAuthService([]byte(conf.JWT.SigningKey), conf.JWT.ExpireDuration)
 	userRepo := repository.NewUserRepository(pgConn)

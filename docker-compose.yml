@@ -67,6 +67,8 @@ services:
     build:
       context: ./
       dockerfile: docker/frontend.dockerfile
+    env_file:
+      - ./frontend/.env
     ports:
       - 3000:80
     networks:
