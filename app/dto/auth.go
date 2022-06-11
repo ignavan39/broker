@@ -1,14 +1,13 @@
-package auth
+package dto
 
 import (
 	"broker/app/models"
 	"errors"
 )
 
-
 type SignPayloadBase struct {
-	Password  string `json:"password"`
-	Email     string `json:"email"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 type SignUpPayload struct {

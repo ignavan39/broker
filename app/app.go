@@ -4,9 +4,9 @@ import (
 	"broker/app/config"
 	delivery "broker/app/delivery/http"
 	"broker/app/delivery/http/auth/v1"
-	"broker/app/repository"
-	"broker/pkg/pg"
+	userRepo "broker/app/repository/user"
 	authSrv "broker/app/service/auth"
+	"broker/pkg/pg"
 	"context"
 	"log"
 	"os"
@@ -34,13 +34,13 @@ func NewApp(config config.Config) *App {
 	log.Println("Database connection established")
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
-	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration)
-	userRepo := repository.NewUserRepository(pgConn)
-	userController := auth.NewController(authService, userRepo)
+	userRepo := userRepo.NewRepository(pgConn)
+	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo)
+	authController := auth.NewController(authService)
+	authRouter := auth.NewRouter(authController)
 
-	userRouter := auth.NewRouter(userController)
 	a.web.Router().Route("/api/v1", func(v1 chi.Router) {
-		userRouter.InitRoutes(v1)
+		authRouter.InitRoutes(v1)
 	})
 	return a
 }

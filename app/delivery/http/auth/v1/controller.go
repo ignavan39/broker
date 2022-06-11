@@ -1,11 +1,9 @@
 package auth
 
 import (
-	"broker/app/config"
-	"broker/app/repository"
+	"broker/app/dto"
 	"broker/app/service"
 	"broker/pkg/httpext"
-	"broker/pkg/utils"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -14,21 +12,19 @@ import (
 )
 
 type Controller struct {
-	authService services.AuthService
-	repo        repository.UserRepository
+	authService service.AuthService
 }
 
 func NewController(
-	authService services.AuthService,
-	repo repository.UserRepository) *Controller {
+	authService service.AuthService,
+) *Controller {
 	return &Controller{
 		authService: authService,
-		repo:        repo,
 	}
 }
 
 func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
-	var payload SignUpPayload
+	var payload dto.SignUpPayload
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
 
@@ -49,10 +45,10 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.repo.Create(payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
+	res, err := c.authService.SignUp(payload)
 
 	if err != nil {
-		if errors.Is(err, repository.DuplicateUserErr) {
+		if errors.Is(err, service.DuplicateUserErr) {
 			httpext.JSON(w, httpext.CommonError{
 				Error: "user already exists",
 				Code:  http.StatusBadRequest,
@@ -68,15 +64,5 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	auth, err := c.authService.Refresh(user.Id)
-
-	if err != nil {
-		httpext.JSON(w, httpext.CommonError{
-			Error: "failed created access token",
-			Code:  http.StatusInternalServerError,
-		}, http.StatusInternalServerError)
-		return
-	}
-
-	httpext.JSON(w, SignResponse{User: *user, Auth: auth}, http.StatusCreated)
+	httpext.JSON(w, res, http.StatusCreated)
 }

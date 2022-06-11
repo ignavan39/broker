@@ -2,17 +2,29 @@ package middleware
 
 import (
 	"broker/app/service"
-	"broker/app/types"
 	"context"
 	"net/http"
 	"strings"
 )
 
-type AuthGuard struct {
-	authService services.AuthService
+type ContextUseType = string
+
+const ContextUserKey ContextUseType = "user"
+
+func GetUserIdFromContext(ctx context.Context) string {
+	userId, ok := ctx.Value(ContextUserKey).(string)
+	if !ok {
+		return ""
+	}
+
+	return userId
 }
 
-func NewAuthGuard(authService services.AuthService) *AuthGuard {
+type AuthGuard struct {
+	authService service.AuthService
+}
+
+func NewAuthGuard(authService service.AuthService) *AuthGuard {
 	return &AuthGuard{
 		authService: authService,
 	}
@@ -35,7 +47,7 @@ func (ag *AuthGuard) Next() func(next http.Handler) http.Handler {
 					return
 				}
 
-				ctx := context.WithValue(r.Context(), types.ContextUserKey, claims.Id)
+				ctx := context.WithValue(r.Context(), ContextUserKey, claims.Id)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			}
 		})

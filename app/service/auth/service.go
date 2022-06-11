@@ -1,29 +1,51 @@
 package auth
 
 import (
-	"broker/app/types"
+	"broker/app/config"
+	"broker/app/dto"
+	"broker/app/repository"
+	"broker/app/service"
+	"broker/pkg/utils"
 	"time"
 
 	"github.com/dgrijalva/jwt-go/v4"
 )
 
-
-type AuthServiceImpl struct {
+type AuthService struct {
 	signingKey     []byte
 	expireDuration time.Duration
+	userRepo       repository.UserRepository
 }
 
 func NewAuthService(
 	signingKey []byte,
 	expireDuration time.Duration,
-) *AuthServiceImpl {
-	return &AuthServiceImpl{
+	userRepo repository.UserRepository,
+) *AuthService {
+	return &AuthService{
 		signingKey:     signingKey,
 		expireDuration: expireDuration,
+		userRepo:       userRepo,
 	}
 }
+func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error) {
+	user, err := a.userRepo.Create(payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
+	if err != nil {
+		return nil, err
+	}
 
-func (a *AuthServiceImpl) Refresh(id string) (map[string]string, error) {
+	auth, err := a.refresh(user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.SignResponse{
+		Auth: auth,
+		User: *user,
+	}, nil
+}
+
+func (a *AuthService) refresh(id string) (map[string]string, error) {
 	auth := map[string]string{}
 	accessToken, err := a.createToken(id, a.expireDuration)
 	if err != nil {
@@ -38,8 +60,8 @@ func (a *AuthServiceImpl) Refresh(id string) (map[string]string, error) {
 	return auth, nil
 }
 
-func (a *AuthServiceImpl) createToken(id string, expireAt time.Duration) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &types.Claims{
+func (a *AuthService) createToken(id string, expireAt time.Duration) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &service.Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: jwt.At(time.Now().Add(expireAt)),
 			IssuedAt:  jwt.At(time.Now()),
@@ -50,8 +72,8 @@ func (a *AuthServiceImpl) createToken(id string, expireAt time.Duration) (string
 	return token.SignedString(a.signingKey)
 }
 
-func (a *AuthServiceImpl) Validate(jwtToken string) (*types.Claims, bool) {
-	customClaims := &types.Claims{}
+func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
+	customClaims := &service.Claims{}
 
 	token, err := jwt.ParseWithClaims(jwtToken, customClaims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.signingKey), nil
