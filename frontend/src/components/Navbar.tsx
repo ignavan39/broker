@@ -65,6 +65,7 @@ export const Navbar = () => {
       ...user,
       auth: {
         accessToken: "",
+        refreshToken: "",
       },
     });
     localStorage.removeItem("user");

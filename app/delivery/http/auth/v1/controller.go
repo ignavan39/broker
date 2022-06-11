@@ -1,12 +1,13 @@
-package user
+package auth
 
 import (
 	"broker/app/config"
 	"broker/app/repository"
-	"broker/app/services"
+	"broker/app/service"
 	"broker/pkg/httpext"
 	"broker/pkg/utils"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	blogger "github.com/sirupsen/logrus"
@@ -49,16 +50,26 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := c.repo.Create(payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
+
 	if err != nil {
-		blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
-		httpext.JSON(w, httpext.CommonError{
-			Error: "user already exists",
-			Code:  http.StatusBadRequest,
-		}, http.StatusBadRequest)
-		return
+		if errors.Is(err, repository.DuplicateUserErr) {
+			httpext.JSON(w, httpext.CommonError{
+				Error: "user already exists",
+				Code:  http.StatusBadRequest,
+			}, http.StatusBadRequest)
+			return
+		} else {
+			blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+			httpext.JSON(w, httpext.CommonError{
+				Error: err.Error(),
+				Code:  http.StatusInternalServerError,
+			}, http.StatusInternalServerError)
+			return
+		}
 	}
 
-	accessToken, err := c.authService.CreateToken(ctx, user.Id)
+	auth, err := c.authService.Refresh(user.Id)
+
 	if err != nil {
 		httpext.JSON(w, httpext.CommonError{
 			Error: "failed created access token",
@@ -67,6 +78,5 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := SignResponse{*user, accessToken}
-	httpext.JSON(w, response, http.StatusCreated)
+	httpext.JSON(w, SignResponse{User: *user, Auth: auth}, http.StatusCreated)
 }

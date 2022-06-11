@@ -1,6 +1,5 @@
 package pg
 
-
 import (
 	"context"
 	"database/sql"

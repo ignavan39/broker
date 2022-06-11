@@ -3,6 +3,7 @@ package repository
 import (
 	"broker/app/models"
 	"broker/pkg/pg"
+	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -32,6 +33,10 @@ func (r *UserRepositoryImpl) Create(email string, password string, lastName stri
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName); err != nil {
+		duplicate := strings.Contains(err.Error(), "duplicate")
+		if duplicate {
+			return nil, DuplicateUserErr
+		}
 		return nil, err
 	}
 

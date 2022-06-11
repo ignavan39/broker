@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
-import { Api } from "../api";
+import { signUp } from "../api";
 import { userState } from "../state/User.state";
 import { User } from "../types/User";
 const Container = styled.div`
@@ -105,12 +105,13 @@ export const Auth = (prop: AuthProp) => {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
    
-    const apiResponse = await Api.signUp(state);
+    const apiResponse = await signUp(state);
     const newUser: User = {
       ...user,
       ...state,
       auth: {
-        accessToken: apiResponse.token,
+        accessToken: apiResponse.auth.accessToken,
+        refreshToken: apiResponse.auth.refreshToken,
       },
     };
     setUser(newUser);

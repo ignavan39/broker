@@ -1,23 +1,20 @@
-package api
+package middleware
 
 import (
+	"broker/app/service"
 	"broker/app/types"
 	"context"
 	"net/http"
 	"strings"
-
-	"github.com/dgrijalva/jwt-go/v4"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type AuthGuard struct {
-	signingKey string
+	authService services.AuthService
 }
 
-func NewAuthGuard(signingKey string) *AuthGuard {
+func NewAuthGuard(authService services.AuthService) *AuthGuard {
 	return &AuthGuard{
-		signingKey: signingKey,
+		authService: authService,
 	}
 }
 
@@ -31,19 +28,14 @@ func (ag *AuthGuard) Next() func(next http.Handler) http.Handler {
 				return
 			} else {
 				jwtToken := authHeader[1]
-				customClaims := &types.Claims{}
-
-				token, err := jwt.ParseWithClaims(jwtToken, customClaims, func(token *jwt.Token) (interface{}, error) {
-					return []byte(ag.signingKey), nil
-				})
-				if err != nil || !token.Valid {
-					blogger.Error("[AuthGuard] Error :%s", err.Error())
+				claims, ok := ag.authService.Validate(jwtToken)
+				if !ok {
 					w.WriteHeader(http.StatusUnauthorized)
 					w.Write([]byte("Unauthorized"))
 					return
 				}
 
-				ctx := context.WithValue(r.Context(), types.ContextUserKey, customClaims.Id)
+				ctx := context.WithValue(r.Context(), types.ContextUserKey, claims.Id)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			}
 		})

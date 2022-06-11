@@ -10,8 +10,9 @@ const getDefaultUser = (): User => {
       lastName: "",
       auth: {
         accessToken: "",
+        refreshToken: "",
       },
-      password: '',
+      password: "",
     };
   } else {
     return JSON.parse(cache) as User;
