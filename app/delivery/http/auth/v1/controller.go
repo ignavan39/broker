@@ -108,5 +108,5 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpext.JSON(w, res, http.StatusCreated)
+	httpext.JSON(w, res, http.StatusOK)
 }
