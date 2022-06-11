@@ -29,37 +29,23 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if err != nil {
-		httpext.JSON(w, httpext.CommonError{
-			Error: "failed decode payload",
-			Code:  http.StatusBadRequest,
-		}, http.StatusBadRequest)
-		return
+		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 	}
 
 	err = payload.Validate()
 	if err != nil {
-		httpext.JSON(w, httpext.CommonError{
-			Error: err.Error(),
-			Code:  http.StatusBadRequest,
-		}, http.StatusBadRequest)
-		return
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 	}
 
 	res, err := c.authService.SignUp(payload)
 
 	if err != nil {
 		if errors.Is(err, service.DuplicateUserErr) {
-			httpext.JSON(w, httpext.CommonError{
-				Error: "user already exists",
-				Code:  http.StatusBadRequest,
-			}, http.StatusBadRequest)
+			httpext.AbortJSON(w, "user already exists", http.StatusBadRequest)
 			return
 		} else {
 			blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
-			httpext.JSON(w, httpext.CommonError{
-				Error: err.Error(),
-				Code:  http.StatusInternalServerError,
-			}, http.StatusInternalServerError)
+			httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -73,19 +59,13 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if err != nil {
-		httpext.JSON(w, httpext.CommonError{
-			Error: "failed decode payload",
-			Code:  http.StatusBadRequest,
-		}, http.StatusBadRequest)
+		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 		return
 	}
 
 	err = payload.Validate()
 	if err != nil {
-		httpext.JSON(w, httpext.CommonError{
-			Error: err.Error(),
-			Code:  http.StatusBadRequest,
-		}, http.StatusBadRequest)
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -101,10 +81,7 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 			blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
 			code = http.StatusInternalServerError
 		}
-		httpext.JSON(w, httpext.CommonError{
-			Error: err.Error(),
-			Code:  code,
-		}, code)
+		httpext.AbortJSON(w, err.Error(), code)
 		return
 	}
 
