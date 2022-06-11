@@ -13,5 +13,6 @@ type Claims struct {
 
 type AuthService interface {
 	SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error)
+	SignIn(payload dto.SignInPayload) (*dto.SignResponse, error)
 	Validate(jwtToken string) (*Claims, bool)
 }

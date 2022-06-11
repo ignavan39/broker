@@ -45,6 +45,27 @@ func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, erro
 	}, nil
 }
 
+func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, error) {
+	user, err := a.userRepo.GetOne(payload.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt) != user.Password {
+		return nil,service.PasswordNotMatch
+	}
+
+	auth, err := a.refresh(user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.SignResponse{
+		Auth: auth,
+		User: *user,
+	}, nil
+}
+
 func (a *AuthService) refresh(id string) (map[string]string, error) {
 	auth := map[string]string{}
 	accessToken, err := a.createToken(id, a.expireDuration)

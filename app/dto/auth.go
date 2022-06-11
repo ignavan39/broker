@@ -35,6 +35,18 @@ func (p *SignUpPayload) Validate() error {
 
 type SignInPayload = SignPayloadBase
 
+func (p *SignInPayload) Validate() error {
+	if len(p.Password) == 0 {
+		return errors.New("password too short")
+	}
+	if len(p.Email) == 0 {
+		return errors.New("email must be not empty string")
+	}
+
+	return nil
+}
+
+
 type SignResponse struct {
 	User models.User       `json:"user"`
 	Auth map[string]string `json:"auth"`
