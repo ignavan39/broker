@@ -91,6 +91,8 @@ services:
       - ./cmd:/srv/core/cmd:ro 
     ports:
      - ${PORT:-8080}:80
+    command: 
+      ["./wait-for-it.sh", "5432"]
     env_file:
       - .env
     networks:
