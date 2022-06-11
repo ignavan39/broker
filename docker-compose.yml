@@ -61,6 +61,16 @@ services:
         ipv4_address: 171.4.4.11
         aliases:
           - postgres.broker.loc
+  redis:
+    container_name: redis_broker
+    image: redis
+    ports: 
+      - 6379:6379
+    networks:
+      broker:
+        ipv4_address: 171.4.4.14
+        aliases:
+          - redis.broker.loc
 
   frontend:
     hostname: "broker-frontend"
