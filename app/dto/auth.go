@@ -7,7 +7,8 @@ import (
 
 type SignPayloadBase struct {
 	Password string `json:"password"`
-	Email    string `json:"email"`
+	Email    *string `json:"email,omitempty"`
+	Nickname *string `json:"nickname,omitempty"`
 }
 
 type SignUpPayload struct {
@@ -21,8 +22,11 @@ func (p *SignUpPayload) Validate() error {
 	if len(p.Password) == 0 {
 		return errors.New("password too short")
 	}
-	if len(p.Email) == 0 {
+	if p.Email == nil || len(*p.Email) == 0{
 		return errors.New("email must be not empty string")
+	}
+	if p.Nickname == nil || len(*p.Nickname) == 0{
+		return errors.New("nickname must be not empty string")
 	}
 	if len(p.LastName) == 0 {
 		return errors.New("last name must be not empty string")
@@ -39,13 +43,12 @@ func (p *SignInPayload) Validate() error {
 	if len(p.Password) == 0 {
 		return errors.New("password too short")
 	}
-	if len(p.Email) == 0 {
-		return errors.New("email must be not empty string")
+	if (p.Email == nil || len(*p.Email) == 0) && (p.Nickname == nil || len(*p.Nickname) == 0){
+		return errors.New("email/nickname must be not empty string")
 	}
 
 	return nil
 }
-
 
 type SignResponse struct {
 	User models.User       `json:"user"`

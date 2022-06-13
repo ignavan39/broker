@@ -21,17 +21,17 @@ func NewRepository(pool pg.Pool) *Repository {
 	}
 }
 
-func (r *Repository) Create(email string, password string, lastName string, firstName string) (*models.User, error) {
+func (r *Repository) Create(nickname string, email string, password string, lastName string, firstName string) (*models.User, error) {
 	user := &models.User{}
 
 	row := sq.Insert("users").
-		Columns("password", "email", "first_name", "last_name").
-		Values(password, email, firstName, lastName).
-		Suffix("returning id, password, email, first_name,last_name").
+		Columns("password", "email", "nickname", "first_name", "last_name").
+		Values(password, email, nickname, firstName, lastName).
+		Suffix("returning id, password, email, nickname, first_name,last_name, avatar_url").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName); err != nil {
+	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.Nickname, &user.FirstName, &user.LastName, &user.AvatarURL); err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 		if duplicate {
 			return nil, service.DuplicateUserErr
@@ -42,16 +42,35 @@ func (r *Repository) Create(email string, password string, lastName string, firs
 	return user, nil
 }
 
-func (r *Repository) GetOne(email string) (*models.User, error) {
+func (r *Repository) GetOneByEmail(email string) (*models.User, error) {
 	var user models.User
 
-	row := sq.Select("id","password", "email", "first_name", "last_name").
+	row := sq.Select("id", "password", "email", "first_name", "last_name", "avatar_url", "nickname").
 		From("users").
 		Where(sq.Eq{"email": email}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName); err != nil {
+	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName, &user.AvatarURL, &user.Nickname); err != nil {
+		if errors.Is(sql.ErrNoRows, err) {
+			return nil, service.UserNotFoundErr
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *Repository) GetOneByNickname(nickname string) (*models.User, error) {
+	var user models.User
+
+	row := sq.Select("id", "password", "email", "first_name", "last_name", "avatar_url", "nickname").
+		From("users").
+		Where(sq.Eq{"nickname": nickname}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName, &user.AvatarURL, &user.Nickname); err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, service.UserNotFoundErr
 		}

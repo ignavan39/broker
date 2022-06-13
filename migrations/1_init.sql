@@ -6,7 +6,8 @@ CREATE TABLE users (
     nickname TEXT NOT NULL,
     "password" TEXT NOT NULL,
     first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL
+    last_name TEXT NOT NULL,
+    avatar_url TEXT NOT NULL DEFAULT 'https://vk.com/images/camera_c.gif'
 );
 
 CREATE UNIQUE INDEX user_email_idx ON users(email);

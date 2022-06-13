@@ -14,6 +14,8 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi"
+
+	chim "github.com/go-chi/chi/middleware"
 )
 
 type App struct {
@@ -40,6 +42,10 @@ func NewApp(config config.Config) *App {
 	authRouter := auth.NewRouter(authController)
 
 	a.web.Router().Route("/api/v1", func(v1 chi.Router) {
+		v1.Use(
+			chim.Logger,
+			chim.RequestID,
+		)
 		authRouter.InitRoutes(v1)
 	})
 	return a
@@ -58,4 +64,5 @@ func (a *App) Run() {
 		log.Println("[os.SIGNAL] done")
 	}()
 	a.web.WaitForDone()
+	log.Println("kek")
 }
