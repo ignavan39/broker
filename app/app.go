@@ -4,8 +4,13 @@ import (
 	"broker/app/config"
 	delivery "broker/app/delivery/http"
 	"broker/app/delivery/http/auth/v1"
+	"broker/app/delivery/http/middleware"
+	"broker/app/delivery/http/workspace/v1"
 	userRepo "broker/app/repository/user"
+
+	workspaceRepo "broker/app/repository/workspace"
 	authSrv "broker/app/service/auth"
+	workspaceSrv "broker/app/service/workspace"
 	"broker/pkg/pg"
 	"context"
 	"log"
@@ -41,12 +46,21 @@ func NewApp(config config.Config) *App {
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
 
+	workspaceRepo := workspaceRepo.NewRepository(pgConn)
+	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo)
+	workspaceController := workspace.NewController(workspaceService)
+
+	authGuard := middleware.NewAuthGuard(authService)
+
+	workspaceRouter := workspace.NewRouter(workspaceController, *authGuard)
+
 	a.web.Router().Route("/api/v1", func(v1 chi.Router) {
 		v1.Use(
 			chim.Logger,
 			chim.RequestID,
 		)
 		authRouter.InitRoutes(v1)
+		workspaceRouter.InitRoutes(v1)
 	})
 	return a
 }

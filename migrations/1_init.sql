@@ -27,7 +27,7 @@ CREATE TYPE workspace_access_type AS ENUM (
 
 CREATE TABLE workspace_accesses (
     id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT workspace_access_pk PRIMARY KEY,
-    workspace_id uuid NOT NULL CONSTRAINT used_id_fk REFERENCES users(id),
+    workspace_id uuid NOT NULL CONSTRAINT workspace_id_fk REFERENCES workspaces(id),
     email TEXT NOT NULL,
     "type" workspace_access_type NOT NULL DEFAULT 'USER'
 );

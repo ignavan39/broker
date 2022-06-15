@@ -29,6 +29,7 @@ func NewAuthService(
 		userRepo:       userRepo,
 	}
 }
+
 func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error) {
 	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
 	if err != nil {
