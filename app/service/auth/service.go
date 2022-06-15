@@ -3,6 +3,7 @@ package auth
 import (
 	"broker/app/config"
 	"broker/app/dto"
+	"broker/app/models"
 	"broker/app/repository"
 	"broker/app/service"
 	"broker/pkg/utils"
@@ -29,7 +30,7 @@ func NewAuthService(
 	}
 }
 func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error) {
-	user, err := a.userRepo.Create(payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
+	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
 	if err != nil {
 		return nil, err
 	}
@@ -46,13 +47,21 @@ func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, erro
 }
 
 func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, error) {
-	user, err := a.userRepo.GetOne(payload.Email)
+	var user *models.User
+	var err error
+
+	if payload.Email != nil {
+		user, err = a.userRepo.GetOneByEmail(*payload.Email)
+	} else {
+		user, err = a.userRepo.GetOneByNickname(*payload.Nickname)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt) != user.Password {
-		return nil,service.PasswordNotMatch
+		return nil, service.PasswordNotMatch
 	}
 
 	auth, err := a.refresh(user.Id)
