@@ -6,12 +6,12 @@ import (
 )
 
 type CreateWorkspacePayload struct {
-	Name      *string `json:"name"`
-	IsPrivate bool    `json:"isPrivate"`
+	Name      string `json:"name"`
+	IsPrivate bool   `json:"isPrivate"`
 }
 
 func (p *CreateWorkspacePayload) Validate() error {
-	if p.Name == nil || len(*p.Name) == 0 {
+	if len(p.Name) == 0 {
 		return errors.New("workspace name must be not empty string")
 	}
 	return nil
@@ -19,7 +19,7 @@ func (p *CreateWorkspacePayload) Validate() error {
 
 type CreateWorkspaceResponse struct {
 	Id        string    `json:"id"`
-	Name      *string   `json:"name"`
+	Name      string    `json:"name"`
 	IsPrivate bool      `json:"isPrivate"`
 	CreatedAt time.Time `json:"createdAt"`
 }

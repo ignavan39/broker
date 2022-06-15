@@ -51,6 +51,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, service.UserNotFoundErr) {
 			httpext.AbortJSON(w, err.Error(), http.StatusNotFound)
+			return
 		}
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return

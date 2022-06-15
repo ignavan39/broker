@@ -27,7 +27,7 @@ func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId str
 		return nil, err
 	}
 
-	workspace, err := s.workspaceRepository.Create(userEmail, *payload.Name, payload.IsPrivate)
+	workspace, err := s.workspaceRepository.Create(userEmail, payload.Name, payload.IsPrivate)
 
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId str
 
 	return &dto.CreateWorkspaceResponse{
 		Id:        workspace.Id,
-		Name:      &workspace.Name,
+		Name:      workspace.Name,
 		IsPrivate: workspace.IsPrivate,
 		CreatedAt: workspace.CreatedAt,
 	}, nil

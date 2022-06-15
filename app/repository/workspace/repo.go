@@ -41,7 +41,8 @@ func (r *Repository) Create(email string, name string, isPrivate bool) (*models.
 		Columns("workspace_id", "email", `"type"`).
 		Values(workspace.Id, email, models.ADMIN).
 		RunWith(r.pool.Write()).
-		PlaceholderFormat(sq.Dollar).Exec()
+		PlaceholderFormat(sq.Dollar).
+		Exec()
 	if err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 		if duplicate {
