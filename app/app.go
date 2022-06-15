@@ -64,5 +64,4 @@ func (a *App) Run() {
 		log.Println("[os.SIGNAL] done")
 	}()
 	a.web.WaitForDone()
-	log.Println("kek")
 }

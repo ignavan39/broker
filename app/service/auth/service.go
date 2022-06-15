@@ -49,12 +49,13 @@ func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, erro
 func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, error) {
 	var user *models.User
 	var err error
+
 	if payload.Email != nil {
 		user, err = a.userRepo.GetOneByEmail(*payload.Email)
 	} else {
 		user, err = a.userRepo.GetOneByNickname(*payload.Nickname)
 	}
-	
+
 	if err != nil {
 		return nil, err
 	}
