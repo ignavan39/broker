@@ -96,9 +96,6 @@ services:
         - project=core
       context: .
       dockerfile: ./docker/app.dockerfile
-    volumes:
-      - ./app:/srv/app/app:ro
-      - ./cmd:/srv/core/cmd:ro 
     ports:
      - ${PORT:-8080}:80
     command: 
