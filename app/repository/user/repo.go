@@ -79,3 +79,22 @@ func (r *Repository) GetOneByNickname(nickname string) (*models.User, error) {
 
 	return &user, nil
 }
+
+func (r *Repository) GetEmailById(userId string) (string, error) {
+	var email string
+
+	row := sq.Select("email").
+		From("users").
+		Where(sq.Eq{"id": userId}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+	if err := row.Scan(&email); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", service.UserNotFoundErr
+		}
+		return "", err
+	}
+
+	return email, nil
+}
