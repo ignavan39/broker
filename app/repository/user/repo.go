@@ -31,7 +31,7 @@ func (r *Repository) Create(nickname string, email string, password string, last
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.Nickname, &user.FirstName, &user.LastName, &user.AvatarURL); err != nil {
+	if err := row.Scan(&user.ID, &user.Password, &user.Email, &user.Nickname, &user.FirstName, &user.LastName, &user.AvatarURL); err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 		if duplicate {
 			return nil, service.DuplicateUserErr
@@ -51,7 +51,7 @@ func (r *Repository) GetOneByEmail(email string) (*models.User, error) {
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName, &user.AvatarURL, &user.Nickname); err != nil {
+	if err := row.Scan(&user.ID, &user.Password, &user.Email, &user.FirstName, &user.LastName, &user.AvatarURL, &user.Nickname); err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, service.UserNotFoundErr
 		}
@@ -70,7 +70,7 @@ func (r *Repository) GetOneByNickname(nickname string) (*models.User, error) {
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	if err := row.Scan(&user.Id, &user.Password, &user.Email, &user.FirstName, &user.LastName, &user.AvatarURL, &user.Nickname); err != nil {
+	if err := row.Scan(&user.ID, &user.Password, &user.Email, &user.FirstName, &user.LastName, &user.AvatarURL, &user.Nickname); err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, service.UserNotFoundErr
 		}

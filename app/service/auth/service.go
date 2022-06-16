@@ -36,7 +36,7 @@ func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, erro
 		return nil, err
 	}
 
-	auth, err := a.refresh(user.Id)
+	auth, err := a.refresh(user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 		return nil, service.PasswordNotMatch
 	}
 
-	auth, err := a.refresh(user.Id)
+	auth, err := a.refresh(user.ID)
 	if err != nil {
 		return nil, err
 	}

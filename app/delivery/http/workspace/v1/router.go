@@ -22,6 +22,7 @@ func (rt Router) InitRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Route("/workspaces", func(r chi.Router) {
 			r.Use(rt.authGuard.Next())
+			r.Get("/", rt.controller.GetManyByUser)
 			r.Post("/create", rt.controller.Create)
 		})
 	})

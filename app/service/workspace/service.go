@@ -33,10 +33,18 @@ func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId str
 		return nil, err
 	}
 
-	return &dto.CreateWorkspaceResponse{
-		Id:        workspace.Id,
-		Name:      workspace.Name,
-		IsPrivate: workspace.IsPrivate,
-		CreatedAt: workspace.CreatedAt,
+	res := dto.CreateWorkspaceResponse(*workspace)
+	return &res, nil
+}
+
+func (s *WorkspaceService) GetManyByUserId(userId string) (*dto.GetManyByUserResponse, error) {
+	workspaces, err := s.workspaceRepository.GetManyByUserId(userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.GetManyByUserResponse{
+		Workspaces: workspaces,
 	}, nil
 }

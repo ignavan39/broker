@@ -59,3 +59,17 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 
 	httpext.JSON(w, res, http.StatusOK)
 }
+
+func (c *Controller) GetManyByUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	res, err := c.workspaceService.GetManyByUserId(userID)
+	if err != nil {
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.JSON(w, res, http.StatusOK)
+}
