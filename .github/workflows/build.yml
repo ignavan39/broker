@@ -3,7 +3,6 @@ name: Build and Lint
 on:
   push:
 
-
 jobs:
   backend-build:
     runs-on: ubuntu-latest
