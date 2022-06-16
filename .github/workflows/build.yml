@@ -1,0 +1,25 @@
+name: Build and Lint
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  backend-build:
+    name: backend app build
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Install Go'
+        run: |
+          VERSION="1.18"
+          ARCH="amd64"
+          curl -O -L "https://golang.org/dl/go${VERSION}.linux-${ARCH}.tar.gz"
+          curl -sL https://golang.org/dl/ | grep -A 5 -w "go${VERSION}.linux-${ARCH}.tar.gz"
+          echo "e85278e98f57cdb150fe8409e6e5df5343ecb13cebf03a5d5ff12bd55a80264f *go${VERSION}.linux-${ARCH}.tar.gz" | shasum -a 256 --check 
+          tar -xf "go${VERSION}.linux-${ARCH}.tar.gz"
+          sudo chown -R root:root ./go
+          sudo mv -v go /usr/local
+
+          export GOPATH=$HOME/go
+          export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+          go version
