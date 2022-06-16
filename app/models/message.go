@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Message struct {
-	Id        string     `json:"id"`
+	ID        string     `json:"id"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `json:"deletedAt,omitempty"`

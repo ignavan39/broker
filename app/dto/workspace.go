@@ -1,8 +1,8 @@
 package dto
 
 import (
+	"broker/app/models"
 	"errors"
-	"time"
 )
 
 type CreateWorkspacePayload struct {
@@ -17,9 +17,8 @@ func (p *CreateWorkspacePayload) Validate() error {
 	return nil
 }
 
-type CreateWorkspaceResponse struct {
-	Id        string    `json:"id"`
-	Name      string    `json:"name"`
-	IsPrivate bool      `json:"isPrivate"`
-	CreatedAt time.Time `json:"createdAt"`
+type CreateWorkspaceResponse = models.Workspace
+
+type GetManyByUserResponse struct {
+	Workspaces []models.Workspace `json:"workspaces"`
 }

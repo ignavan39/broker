@@ -4,6 +4,8 @@ import (
 	"broker/app/models"
 	"broker/app/service"
 	"broker/pkg/pg"
+	"database/sql"
+	"errors"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
@@ -29,7 +31,7 @@ func (r *Repository) Create(email string, name string, isPrivate bool) (*models.
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	if err := row.Scan(&workspace.Id, &workspace.Name, &workspace.CreatedAt, &workspace.IsPrivate); err != nil {
+	if err := row.Scan(&workspace.ID, &workspace.Name, &workspace.CreatedAt, &workspace.IsPrivate); err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 		if duplicate {
 			return nil, service.DuplicateWorkspaceErr
@@ -39,7 +41,7 @@ func (r *Repository) Create(email string, name string, isPrivate bool) (*models.
 
 	_, err := sq.Insert("workspace_accesses").
 		Columns("workspace_id", "email", `"type"`).
-		Values(workspace.Id, email, models.ADMIN).
+		Values(workspace.ID, email, models.ADMIN).
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		Exec()
@@ -52,4 +54,33 @@ func (r *Repository) Create(email string, name string, isPrivate bool) (*models.
 	}
 
 	return &workspace, nil
+}
+
+func (r *Repository) GetManyByUserEmail(email string) ([]models.Workspace, error) {
+	workspaces := make([]models.Workspace, 0)
+
+	rows, err := sq.Select("w.id", `w."name"`, "w.created_at", "w.is_private").
+		From("workspaces w").
+		LeftJoin("workspace_accesses wa ON wa.workspace_id = w.id").
+		Where(sq.Eq{"wa.email": email}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		Query()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return workspaces, nil
+		}
+		return workspaces, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var w models.Workspace
+		if err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.IsPrivate); err != nil {
+			return nil, err
+		}
+
+		workspaces = append(workspaces, w)
+	}
+	return workspaces, nil
 }

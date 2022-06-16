@@ -35,6 +35,7 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 	err = payload.Validate()
 	if err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	res, err := c.authService.SignUp(payload)
