@@ -56,13 +56,14 @@ func (r *Repository) Create(email string, name string, isPrivate bool) (*models.
 	return &workspace, nil
 }
 
-func (r *Repository) GetManyByUserEmail(email string) ([]models.Workspace, error) {
+func (r *Repository) GetManyByUserId(id string) ([]models.Workspace, error) {
 	workspaces := make([]models.Workspace, 0)
 
 	rows, err := sq.Select("w.id", `w."name"`, "w.created_at", "w.is_private").
 		From("workspaces w").
-		LeftJoin("workspace_accesses wa ON wa.workspace_id = w.id").
-		Where(sq.Eq{"wa.email": email}).
+		InnerJoin("workspace_accesses wa ON wa.workspace_id = w.id").
+		InnerJoin("users u ON wa.email = u.email").
+		Where(sq.Eq{"u.id": id}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		Query()

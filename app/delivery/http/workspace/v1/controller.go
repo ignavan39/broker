@@ -67,10 +67,6 @@ func (c *Controller) GetManyByUser(w http.ResponseWriter, r *http.Request) {
 
 	res, err := c.workspaceService.GetManyByUserId(userID)
 	if err != nil {
-		if errors.Is(err, service.UserNotFoundErr) {
-			httpext.AbortJSON(w, err.Error(), http.StatusNotFound)
-			return
-		}
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

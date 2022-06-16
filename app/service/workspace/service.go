@@ -38,13 +38,7 @@ func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId str
 }
 
 func (s *WorkspaceService) GetManyByUserId(userId string) (*dto.GetManyByUserResponse, error) {
-	email, err := s.userRepository.GetEmailById(userId)
-
-	if err != nil {
-		return nil, err
-	}
-
-	workspaces, err := s.workspaceRepository.GetManyByUserEmail(email)
+	workspaces, err := s.workspaceRepository.GetManyByUserId(userId)
 
 	if err != nil {
 		return nil, err

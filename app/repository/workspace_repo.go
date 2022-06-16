@@ -4,5 +4,5 @@ import "broker/app/models"
 
 type WorkspaceRepository interface {
 	Create(email string, name string, isPrivate bool) (*models.Workspace, error)
-	GetManyByUserEmail(email string) ([]models.Workspace, error)
+	GetManyByUserId(id string) ([]models.Workspace, error)
 }
