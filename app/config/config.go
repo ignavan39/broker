@@ -9,14 +9,24 @@ import (
 )
 
 type JWTConfig struct {
-	HashSalt       string        `env:"HASH_SALT"`
-	SigningKey     string        `env:"SIGNING_KEY"`
-	ExpireDuration time.Duration `env:"EXPIRE_DURATION"`
+	HashSalt       string        `env:"HASH_SALT" envDefault:"super_secret"`
+	SigningKey     string        `env:"SIGNING_KEY" envDefault:"signing_key"`
+	ExpireDuration time.Duration `env:"EXPIRE_DURATION" envDefault:"24h"`
+}
+
+type AMQPConfig struct {
+	Host          string `env:"AMQP_HOST" envDefault:"broker.rabbitmq.loc"`
+	Port          int    `env:"AMQP_PORT" envDefault:"5672"`
+	User          string `env:"AMQP_USER" envDefault:"user"`
+	Pass          string `env:"AMQP_PASS" envDefault:"pass"`
+	Vhost         string `env:"AMQP_VHOST" envDefault:"/"`
+	QueueHashSalt string `env:"QUEUE_HASH_SALT" envDefault:"super_secret"`
 }
 
 type Config struct {
 	JWT      JWTConfig
 	Database pg.Config
+	AMQP     AMQPConfig
 }
 
 var config = Config{}
@@ -27,12 +37,23 @@ func Init() error {
 		return fmt.Errorf("error for parsing DATABASE_PORT :%s", err)
 	}
 
-	pgCong := pg.Config{
+	pgConf := pg.Config{
 		Password: os.Getenv("DATABASE_PASS"),
 		Host:     os.Getenv("DATABASE_HOST"),
 		User:     os.Getenv("DATABASE_USER"),
 		Port:     uint16(dbPort),
 		DB:       os.Getenv("DATABASE_NAME"),
+	}
+
+	amqpPort, err := strconv.ParseInt(os.Getenv("AMQP_PORT"), 10, 16)
+	if err != nil {
+		return fmt.Errorf("error for parsing AMQP_PORT :%s", err)
+	}
+	amqpConf := AMQPConfig{
+		Port: int(amqpPort),
+		Host: os.Getenv("AMQP_HOST"),
+		User: os.Getenv("AMQP_USER"),
+		Pass: os.Getenv("AMQP_PASS"),
 	}
 
 	expireDurationRaw := os.Getenv("EXPIRE_DURATION")
@@ -48,8 +69,9 @@ func Init() error {
 	}
 
 	config = Config{
-		Database: pgCong,
+		Database: pgConf,
 		JWT:      jwt,
+		AMQP:     amqpConf,
 	}
 	return nil
 }

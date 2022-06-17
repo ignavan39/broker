@@ -7,6 +7,8 @@ import (
 	"broker/app/delivery/http/middleware"
 	"broker/app/delivery/http/workspace/v1"
 	userRepo "broker/app/repository/user"
+	"fmt"
+	"time"
 
 	workspaceRepo "broker/app/repository/workspace"
 	authSrv "broker/app/service/auth"
@@ -21,6 +23,7 @@ import (
 	"github.com/go-chi/chi"
 
 	chim "github.com/go-chi/chi/middleware"
+	"github.com/streadway/amqp"
 )
 
 type App struct {
@@ -29,6 +32,9 @@ type App struct {
 }
 
 func NewApp(config config.Config) *App {
+	// hack for await rabbitmq connection
+	time.Sleep(15 * time.Second)
+
 	a := &App{
 		config: config,
 	}
@@ -38,7 +44,21 @@ func NewApp(config config.Config) *App {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	log.Println("Database connection established")
+
+	connStr := fmt.Sprintf("amqp://%s:%s@%s:%d", config.AMQP.User, config.AMQP.Pass, config.AMQP.Host, config.AMQP.Port)
+	fmt.Println(connStr)
+
+	conn, err := amqp.Dial(connStr)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Println(conn.Config.Vhost)
+
+	log.Println("AMQP connection established")
+
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
 	userRepo := userRepo.NewRepository(pgConn)
