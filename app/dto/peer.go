@@ -32,7 +32,6 @@ var (
 )
 
 type Meta struct {
-	ReportKey    string `json:"report"`
 	QueueName    string `json:"queueName"`
 	ExchangeName string `json:"exchange"`
 }

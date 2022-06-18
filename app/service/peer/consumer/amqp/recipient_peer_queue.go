@@ -12,22 +12,22 @@ import (
 	blogger "github.com/sirupsen/logrus"
 )
 
-type PeerQueue struct {
+type RecipientPeerQueue struct {
 	recipientID string
-	senderID    string
+	peerID    string
 	meta        dto.Meta
 	stop        chan int
 	queue       amqp.Queue
 	channel     *amqp.Channel
 }
 
-func NewPeerQueue(recipientID string, senderID string, workspaceID string, conn *amqp.Connection) (*PeerQueue, error) {
+func NewRecipientPeerQueue(recipientID string, peerID string, conn *amqp.Connection) (*RecipientPeerQueue, error) {
 	amqpChannel, err := conn.Channel()
 	if err != nil {
 		return nil, err
 	}
 
-	queueName := utils.CryptString(fmt.Sprintf("%s%s", workspaceID, recipientID), config.GetConfig().AMQP.QueueHashSalt)
+	queueName := utils.CryptString(fmt.Sprintf("%s%s", peerID, recipientID), config.GetConfig().AMQP.QueueHashSalt)
 	exchangeName := fmt.Sprintf("%s_%s", getExchangePrefix(), recipientID)
 	queue, err := amqpChannel.QueueDeclare(queueName, false, true, true, false, nil)
 	if err != nil {
@@ -44,21 +44,20 @@ func NewPeerQueue(recipientID string, senderID string, workspaceID string, conn 
 		return nil, err
 	}
 
-	return &PeerQueue{
+	return &RecipientPeerQueue{
 		queue:       queue,
 		recipientID: recipientID,
-		senderID:    senderID,
+		peerID: peerID,
 		channel:     amqpChannel,
 		stop:        make(chan int),
 		meta: dto.Meta{
 			QueueName:    queueName,
 			ExchangeName: exchangeName,
-			ReportKey:    queueName,
 		},
 	}, nil
 }
 
-func (q *PeerQueue) Run(out chan dto.PeerEnvelope) error {
+func (q *RecipientPeerQueue) Run(out chan dto.PeerEnvelope) error {
 	deliveries, err := q.channel.Consume(
 		q.meta.QueueName,
 		fmt.Sprintf("consumer-%s", q.meta.QueueName),
@@ -71,17 +70,29 @@ func (q *PeerQueue) Run(out chan dto.PeerEnvelope) error {
 	if err != nil {
 		return err
 	}
-	for delivery := range deliveries{
+	for delivery := range deliveries {
 		var payload dto.PeerEnvelope
 		err := json.Unmarshal(delivery.Body, &payload)
 		if err != nil {
-			blogger.Errorf("[ClientQueue][Queue :%s] failed decode", q.meta.QueueName)
+			blogger.Errorf("[PeerQueue][Queue :%s] failed decode", q.meta.QueueName)
+			continue
 		} else {
+			blogger.Infof("[PeerQueue][Queue :%s] receive message %v", payload)
 			out <- payload
 		}
 	}
 	return nil
 }
+
+
+func (p *RecipientPeerQueue) Name() string {
+	return p.meta.QueueName
+}
+
+func (p *RecipientPeerQueue) ExchangeName() string {
+	return p.meta.ExchangeName
+}
+
 func getExchangePrefix() string {
 	return "peer"
 }

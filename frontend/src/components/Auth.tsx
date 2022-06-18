@@ -91,6 +91,7 @@ export const Auth = (prop: AuthProp) => {
     email: user.email ?? "",
     firstName: !prop.register ? user.firstName ?? "" : "",
     lastName: !prop.register ? user.lastName ?? "" : "",
+    nickname: !prop.register ? user.nickname ?? "" : "",
   });
   const navigate = useNavigate();
 
@@ -139,6 +140,14 @@ export const Auth = (prop: AuthProp) => {
           />
           {prop.register ? (
             <>
+               <Input
+                type={"text"}
+                minLength={1}
+                placeholder="Nickname"
+                onInput={handleInput}
+                value={state.nickname}
+                name="nickname"
+              />
               <Input
                 type={"text"}
                 minLength={1}
