@@ -12,7 +12,7 @@ import (
 	blogger "github.com/sirupsen/logrus"
 )
 
-type SenderWorkspaceQueue struct {
+type SenderQueue struct {
 	senderID    string
 	workspaceID string
 	meta        dto.Meta
@@ -21,12 +21,12 @@ type SenderWorkspaceQueue struct {
 	channel     *amqp.Channel
 }
 
-func NewSenderWorkspaceQueue(
+func NewSenderQueue(
 	senderID string,
 	workspaceID string,
-	conn *amqp.Connection,
-) (*SenderWorkspaceQueue, error) {
-	amqpChannel, err := conn.Channel()
+	connection *amqp.Connection,
+) (*SenderQueue, error) {
+	amqpChannel, err := connection.Channel()
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func NewSenderWorkspaceQueue(
 		return nil, err
 	}
 
-	return &SenderWorkspaceQueue{
+	return &SenderQueue{
 		queue:       queue,
 		senderID:    senderID,
 		workspaceID: workspaceID,
@@ -83,7 +83,7 @@ func NewSenderWorkspaceQueue(
 	}, nil
 }
 
-func (q *SenderWorkspaceQueue) Run(out chan dto.PeerEnvelope) error {
+func (q *SenderQueue) Run(out chan dto.PeerEnvelope) error {
 	deliveries, err := q.channel.Consume(
 		q.meta.QueueName,
 		fmt.Sprintf("%s.consumer-%s", getPrefix(), q.meta.QueueName),
@@ -112,11 +112,11 @@ func (q *SenderWorkspaceQueue) Run(out chan dto.PeerEnvelope) error {
 	return nil
 }
 
-func (p *SenderWorkspaceQueue) Name() string {
+func (p *SenderQueue) Name() string {
 	return p.meta.QueueName
 }
 
-func (p *SenderWorkspaceQueue) ExchangeName() string {
+func (p *SenderQueue) ExchangeName() string {
 	return p.meta.ExchangeName
 }
 

@@ -9,22 +9,22 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type AmqpWorkspaceConsumer struct {
-	connection           *amqp.Connection
-	sendDelivery         chan dto.PeerEnvelope
-	senderDispatchers    map[string]*SenderDispatcher
-	senderDispatchersMux sync.RWMutex
+type Consumer struct {
+	connection            *amqp.Connection
+	sendDelivery          chan dto.PeerEnvelope
+	senderDispatchers     map[string]*SenderDispatcher
+	senderDispatchersLock sync.RWMutex
 }
 
-func NewAmqpWorkspaceConsumer(connection *amqp.Connection) *AmqpWorkspaceConsumer {
-	return &AmqpWorkspaceConsumer{
+func NewConsumer(connection *amqp.Connection) *Consumer {
+	return &Consumer{
 		connection:        connection,
 		senderDispatchers: make(map[string]*SenderDispatcher, 1000),
 		sendDelivery:      make(chan dto.PeerEnvelope),
 	}
 }
 
-func (apc *AmqpWorkspaceConsumer) Init() error {
+func (apc *Consumer) Init() error {
 	channel, err := apc.connection.Channel()
 	if err != nil {
 		return err
@@ -66,13 +66,13 @@ func (apc *AmqpWorkspaceConsumer) Init() error {
 	return nil
 }
 
-func (apc *AmqpWorkspaceConsumer) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error) {
-	apc.senderDispatchersMux.Lock()
-	defer apc.senderDispatchersMux.Unlock()
+func (apc *Consumer) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error) {
+	apc.senderDispatchersLock.Lock()
+	defer apc.senderDispatchersLock.Unlock()
 
 	dispatcher, exist := apc.senderDispatchers[payload.WorkspaceID]
 	if !exist {
-		dispatcher = NewSenderDispatcher(apc.connection, apc.sendDelivery, senderID)
+		dispatcher = NewSenderDispatcher(apc.connection, apc.sendDelivery)
 		apc.senderDispatchers[payload.WorkspaceID] = dispatcher
 	}
 	queue, err := dispatcher.AddQueue(senderID, payload.WorkspaceID)
@@ -94,7 +94,7 @@ func (apc *AmqpWorkspaceConsumer) CreateConnection(ctx context.Context, senderID
 	}, nil
 }
 
-func (apc *AmqpWorkspaceConsumer) Consume(handler func(payload dto.PeerEnvelope)) {
+func (apc *Consumer) Consume(handler func(payload dto.PeerEnvelope)) {
 	go func() {
 		for payload := range apc.sendDelivery {
 			go handler(payload)

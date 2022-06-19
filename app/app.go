@@ -71,7 +71,7 @@ func NewApp(config config.Config) *App {
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
 
-	peerConsumer := peerConsumerAmqp.NewAmqpWorkspaceConsumer(amqpConn)
+	peerConsumer := peerConsumerAmqp.NewConsumer(amqpConn)
 	if err := peerConsumer.Init(); err != nil {
 		log.Fatalln(err)
 	}
