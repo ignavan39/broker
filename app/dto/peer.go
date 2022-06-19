@@ -2,7 +2,6 @@ package dto
 
 import (
 	"broker/app/models"
-	"context"
 	"errors"
 )
 
@@ -30,31 +29,3 @@ var (
 	BlockUserEvent     PeerEventType = "block_user"
 	OnlineUserEvent    PeerEventType = "online_user"
 )
-
-type Meta struct {
-	QueueName    string `json:"queueName"`
-	ExchangeName string `json:"exchange"`
-}
-
-type CreatePeerConnectionPayload struct {
-	PeerId string `json:"peerId"`
-}
-
-type CreatePeerConnectionResponse struct {
-	Meta
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Vhost    string `json:"vhost"`
-	Password string `json:"password"`
-}
-
-type PeerEnvelope struct {
-	ctx context.Context
-
-	Meta    Meta            `json:"meta"`
-	Event   PeerEventType   `json:"event"`
-	Payload *models.Message `json:"payload,omitempty"`
-	FromId  string          `json:"fromId"`
-	PeerId  string          `json:"peerId"`
-}

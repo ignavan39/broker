@@ -15,12 +15,14 @@ type JWTConfig struct {
 }
 
 type AMQPConfig struct {
-	Host          string `env:"AMQP_HOST" envDefault:"broker.rabbitmq.loc"`
-	Port          int    `env:"AMQP_PORT" envDefault:"5672"`
-	User          string `env:"AMQP_USER" envDefault:"user"`
-	Pass          string `env:"AMQP_PASS" envDefault:"pass"`
-	Vhost         string `env:"AMQP_VHOST" envDefault:"/"`
-	QueueHashSalt string `env:"QUEUE_HASH_SALT" envDefault:"super_secret"`
+	Host             string `env:"AMQP_HOST" envDefault:"broker.rabbitmq.loc"`
+	Port             int    `env:"AMQP_PORT" envDefault:"5672"`
+	User             string `env:"AMQP_USER" envDefault:"user"`
+	Pass             string `env:"AMQP_PASS" envDefault:"pass"`
+	ExternalUser     string `env:"AMQP_EXTERNAL_USER" envDefault:"user"`
+	ExternalPassword string `env:"AMQP_EXTERNAL_PASS" envDefault:"pass"`
+	Vhost            string `env:"AMQP_VHOST" envDefault:"/"`
+	QueueHashSalt    string `env:"QUEUE_HASH_SALT" envDefault:"super_secret"`
 }
 
 type Config struct {
@@ -50,10 +52,14 @@ func Init() error {
 		return fmt.Errorf("error for parsing AMQP_PORT :%s", err)
 	}
 	amqpConf := AMQPConfig{
-		Port: int(amqpPort),
-		Host: os.Getenv("AMQP_HOST"),
-		User: os.Getenv("AMQP_USER"),
-		Pass: os.Getenv("AMQP_PASS"),
+		Port:             int(amqpPort),
+		Host:             os.Getenv("AMQP_HOST"),
+		User:             os.Getenv("AMQP_USER"),
+		Pass:             os.Getenv("AMQP_PASS"),
+		Vhost:            os.Getenv("AMQP_VHOST"),
+		ExternalUser:     os.Getenv("AMQP_EXTERNAL_USER"),
+		ExternalPassword: os.Getenv("AMQP_EXTERNAL_PASS"),
+		QueueHashSalt:    os.Getenv("QUEUE_HASH_SALT"),
 	}
 
 	expireDurationRaw := os.Getenv("EXPIRE_DURATION")

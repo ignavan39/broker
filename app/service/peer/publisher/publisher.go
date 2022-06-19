@@ -1,11 +1,11 @@
-package consumer
+package publisher
 
 import (
 	"broker/app/dto"
 	"context"
 )
 
-type Consumer interface {
-	Consume(handler func(payload dto.PeerEnvelope))
+type Publisher interface {
+	Publish(payload dto.PeerEnvelope)
 	CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error)
 }
