@@ -35,7 +35,7 @@ func NewSenderQueue(
 		"%s.%s",
 		getPrefix(),
 		utils.CryptString(fmt.Sprintf("%s%s", workspaceID, senderID), config.GetConfig().AMQP.QueueHashSalt))
-	exchangeName := fmt.Sprintf("%s-%s", getPrefix(), senderID)
+	exchangeName := fmt.Sprintf("%s-%s", getExchangePrefix(), senderID)
 
 	queue, err := amqpChannel.QueueDeclare(queueName,
 		false,
@@ -121,6 +121,10 @@ func (p *SenderQueue) ExchangeName() string {
 }
 
 func getPrefix() string {
+	return "workspace.consumer"
+}
+
+func getExchangePrefix() string {
 	return "workspace"
 }
 

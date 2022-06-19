@@ -31,20 +31,20 @@ func (d *SenderDispatcher) AddQueue(senderID string, workspaceID string) (*Sende
 	d.senderQueueMapLock.Lock()
 	defer d.senderQueueMapLock.Unlock()
 
-	queue, err := NewSenderQueue(senderID, workspaceID, d.connection)
-
-	if err != nil {
-		blogger.Infof("[SenderDispatcher][sender :%s] failed add queue %s", senderID, err.Error())
-		return nil, err
-	}
-
 	existingQueue, exist := d.senderQueueMap[senderID]
 	if exist {
 		return existingQueue, nil
+	} else {
+		queue, err := NewSenderQueue(senderID, workspaceID, d.connection)
+
+		if err != nil {
+			blogger.Infof("[SenderDispatcher][sender :%s] failed add queue %s", senderID, err.Error())
+			return nil, err
+		}
+
+		go queue.Run(d.delivery)
+		d.senderQueueMap[queue.Name()] = queue
+
+		return queue, nil
 	}
-
-	go queue.Run(d.delivery)
-	d.senderQueueMap[queue.Name()] = queue
-
-	return queue, nil
 }

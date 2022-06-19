@@ -24,8 +24,8 @@ func NewConsumer(connection *amqp.Connection) *Consumer {
 	}
 }
 
-func (apc *Consumer) Init() error {
-	channel, err := apc.connection.Channel()
+func (c *Consumer) Init() error {
+	channel, err := c.connection.Channel()
 	if err != nil {
 		return err
 	}
@@ -66,14 +66,14 @@ func (apc *Consumer) Init() error {
 	return nil
 }
 
-func (apc *Consumer) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error) {
-	apc.senderDispatchersLock.Lock()
-	defer apc.senderDispatchersLock.Unlock()
+func (c *Consumer) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error) {
+	c.senderDispatchersLock.Lock()
+	defer c.senderDispatchersLock.Unlock()
 
-	dispatcher, exist := apc.senderDispatchers[payload.WorkspaceID]
+	dispatcher, exist := c.senderDispatchers[payload.WorkspaceID]
 	if !exist {
-		dispatcher = NewSenderDispatcher(apc.connection, apc.sendDelivery)
-		apc.senderDispatchers[payload.WorkspaceID] = dispatcher
+		dispatcher = NewSenderDispatcher(c.connection, c.sendDelivery)
+		c.senderDispatchers[payload.WorkspaceID] = dispatcher
 	}
 	queue, err := dispatcher.AddQueue(senderID, payload.WorkspaceID)
 	if err != nil {
@@ -94,9 +94,9 @@ func (apc *Consumer) CreateConnection(ctx context.Context, senderID string, payl
 	}, nil
 }
 
-func (apc *Consumer) Consume(handler func(payload dto.PeerEnvelope)) {
+func (c *Consumer) Consume(handler func(payload dto.PeerEnvelope)) {
 	go func() {
-		for payload := range apc.sendDelivery {
+		for payload := range c.sendDelivery {
 			go handler(payload)
 		}
 	}()

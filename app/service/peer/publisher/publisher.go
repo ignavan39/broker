@@ -6,6 +6,6 @@ import (
 )
 
 type Publisher interface {
-	Publish(payload dto.PeerEnvelope)
+	Publish(workspaceID string, payload dto.PeerEnvelope) error
 	CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error)
 }

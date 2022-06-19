@@ -15,6 +15,7 @@ import (
 	peerSrv "broker/app/service/peer"
 
 	peerConsumerAmqp "broker/app/service/peer/consumer/amqp"
+	peerPublisherAmqp "broker/app/service/peer/publisher/amqp"
 	"fmt"
 	"time"
 
@@ -76,6 +77,8 @@ func NewApp(config config.Config) *App {
 		log.Fatalln(err)
 	}
 
+	peerPublisher := peerPublisherAmqp.NewPublisher(amqpConn)
+
 	workspaceRepo := workspaceRepo.NewRepository(pgConn)
 	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo)
 	workspaceController := workspace.NewController(workspaceService)
@@ -84,7 +87,7 @@ func NewApp(config config.Config) *App {
 
 	workspaceRouter := workspace.NewRouter(workspaceController, *authGuard)
 
-	peerService := peerSrv.NewPeerService(peerConsumer)
+	peerService := peerSrv.NewPeerService(peerConsumer, peerPublisher)
 	peerController := peer.NewController(peerService)
 	peerRouter := peer.NewRouter(peerController, authGuard)
 

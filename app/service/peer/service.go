@@ -14,11 +14,11 @@ type PeerService struct {
 
 func NewPeerService(
 	consumer consumer.Consumer,
-	// publisher publisher.Publisher,
+	publisher publisher.Publisher,
 ) *PeerService {
 	return &PeerService{
-		consumer: consumer,
-		// publisher: publisher,
+		consumer:  consumer,
+		publisher: publisher,
 	}
 }
 
@@ -29,7 +29,7 @@ func (ps *PeerService) CreateConnection(ctx context.Context, senderID string, pa
 		return nil, err
 	}
 
-	publish, err := ps.consumer.CreateConnection(ctx, senderID, payload)
+	publish, err := ps.publisher.CreateConnection(ctx, senderID, payload)
 
 	if err != nil {
 		return nil, err
@@ -39,4 +39,12 @@ func (ps *PeerService) CreateConnection(ctx context.Context, senderID string, pa
 		Consume: *consume,
 		Publish: *publish,
 	}, nil
+}
+
+func (ps *PeerService) Run() {
+	// TODO save to database and move to member PeerService
+
+	go ps.consumer.Consume(func(payload dto.PeerEnvelope) {
+		// ps.publisher.Publish(payload)
+	})
 }
