@@ -8,4 +8,5 @@ var (
 	PasswordNotMatch           = errors.New("Password doesn't match")
 	DuplicateWorkspaceErr      = errors.New("Duplicate workspace")
 	DuplicateWorkspaceEmailErr = errors.New("Duplicate user in workspace")
+	WorkspaceNotExistsErr      = errors.New("Workspace didn`t exist")
 )

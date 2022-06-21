@@ -37,7 +37,44 @@ func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId str
 	return &res, nil
 }
 
-func (s *WorkspaceService) GetManyByUserId(userId string) (*dto.GetManyByUserResponse, error) {
+func (s *WorkspaceService) Delete(userID string, workspaceID string) error {
+	_, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.workspaceRepository.Delete(workspaceID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *WorkspaceService) Update(payload dto.UpdateWorkspacePayload, workspaceID string, userID string) (*dto.UpdateWorkspaceResponse, error) {
+	_, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	workspace, updateErr := s.workspaceRepository.Update(workspaceID, payload.Name, payload.IsPrivate)
+
+	if updateErr != nil {
+		return nil, updateErr
+	}
+
+	return &dto.UpdateWorkspaceResponse{
+		ID:        workspace.ID,
+		Name:      workspace.Name,
+		CreatedAt: workspace.CreatedAt,
+		IsPrivate: workspace.IsPrivate,
+	}, nil
+}
+
+func (s *WorkspaceService) GetManyByUserID(userId string) (*dto.GetManyByUserResponse, error) {
 	workspaces, err := s.workspaceRepository.GetManyByUserId(userId)
 
 	if err != nil {

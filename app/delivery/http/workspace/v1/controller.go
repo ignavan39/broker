@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"github.com/go-chi/chi"
 )
 
 type Controller struct {
@@ -65,8 +67,61 @@ func (c *Controller) GetManyByUser(w http.ResponseWriter, r *http.Request) {
 
 	userID := middleware.GetUserIdFromContext(ctx)
 
-	res, err := c.workspaceService.GetManyByUserId(userID)
+	res, err := c.workspaceService.GetManyByUserID(userID) //TODO: переименовать
 	if err != nil {
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.JSON(w, res, http.StatusOK)
+}
+
+func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	workspaceID := chi.URLParam(r, "workspaceID")
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	err := c.workspaceService.Delete(userID, workspaceID)
+
+	if(err != nil) {
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	httpext.EmptyResponse(w, http.StatusOK)
+}
+
+func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
+	var payload dto.UpdateWorkspacePayload
+
+	err := json.NewDecoder(r.Body).Decode(&payload)
+	ctx := r.Context()
+
+	if err != nil {
+		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+		return
+	}
+
+	err = payload.Validate()
+	if err != nil {
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	workspaceID := chi.URLParam(r, "workspaceID")
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	res, err := c.workspaceService.Update(payload, workspaceID, userID)
+
+	if err != nil {
+		if errors.Is(err, service.DuplicateWorkspaceEmailErr) ||
+			errors.Is(err, service.WorkspaceNotExistsErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
