@@ -5,12 +5,20 @@ import (
 	delivery "broker/app/delivery/http"
 	"broker/app/delivery/http/auth/v1"
 	"broker/app/delivery/http/middleware"
+	"broker/app/delivery/http/peer/v1"
 	"broker/app/delivery/http/workspace/v1"
 	userRepo "broker/app/repository/user"
-
 	workspaceRepo "broker/app/repository/workspace"
 	authSrv "broker/app/service/auth"
 	workspaceSrv "broker/app/service/workspace"
+
+	peerSrv "broker/app/service/peer"
+
+	peerConsumerAmqp "broker/app/service/peer/consumer/amqp"
+	peerPublisherAmqp "broker/app/service/peer/publisher/amqp"
+	"fmt"
+	"time"
+
 	"broker/pkg/pg"
 	"context"
 	"log"
@@ -21,6 +29,7 @@ import (
 	"github.com/go-chi/chi"
 
 	chim "github.com/go-chi/chi/middleware"
+	"github.com/streadway/amqp"
 )
 
 type App struct {
@@ -38,13 +47,37 @@ func NewApp(config config.Config) *App {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	log.Println("Database connection established")
+
+	connStr := fmt.Sprintf("amqp://%s:%s@%s:%d", config.AMQP.User, config.AMQP.Pass, config.AMQP.Host, config.AMQP.Port)
+	fmt.Println(connStr)
+
+	amqpConn, err := amqp.Dial(connStr)
+	if err != nil {
+		// hack for await rabbitmq connection
+		time.Sleep(10 * time.Second)
+		amqpConn, err = amqp.Dial(connStr)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	log.Println("AMQP connection established")
+
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
 	userRepo := userRepo.NewRepository(pgConn)
 	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo)
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
+
+	peerConsumer := peerConsumerAmqp.NewConsumer(amqpConn)
+	if err := peerConsumer.Init(); err != nil {
+		log.Fatalln(err)
+	}
+
+	peerPublisher := peerPublisherAmqp.NewPublisher(amqpConn)
 
 	workspaceRepo := workspaceRepo.NewRepository(pgConn)
 	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo)
@@ -54,6 +87,10 @@ func NewApp(config config.Config) *App {
 
 	workspaceRouter := workspace.NewRouter(workspaceController, *authGuard)
 
+	peerService := peerSrv.NewPeerService(peerConsumer, peerPublisher)
+	peerController := peer.NewController(peerService)
+	peerRouter := peer.NewRouter(peerController, authGuard)
+
 	a.web.Router().Route("/api/v1", func(v1 chi.Router) {
 		v1.Use(
 			chim.Logger,
@@ -61,6 +98,7 @@ func NewApp(config config.Config) *App {
 		)
 		authRouter.InitRoutes(v1)
 		workspaceRouter.InitRoutes(v1)
+		peerRouter.InitRoutes(v1)
 	})
 	return a
 }
