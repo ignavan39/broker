@@ -64,7 +64,7 @@ func (r *Repository) Delete(workspaceID string) error {
 		Exec()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return service.WorkspaceNotExistsErr
+			return service.WorkspaceAccessDeniedErr
 		}
 		return err
 	}
