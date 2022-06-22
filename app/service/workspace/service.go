@@ -38,7 +38,7 @@ func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId str
 }
 
 func (s *WorkspaceService) Delete(userID string, workspaceID string) error {
-	_, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+	_, err := s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
 
 	if err != nil {
 		return err
@@ -54,16 +54,16 @@ func (s *WorkspaceService) Delete(userID string, workspaceID string) error {
 }
 
 func (s *WorkspaceService) Update(payload dto.UpdateWorkspacePayload, workspaceID string, userID string) (*dto.UpdateWorkspaceResponse, error) {
-	_, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+	_, err := s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	workspace, updateErr := s.workspaceRepository.Update(workspaceID, payload.Name, payload.IsPrivate)
+	workspace, err := s.workspaceRepository.Update(workspaceID, payload.Name, payload.IsPrivate)
 
-	if updateErr != nil {
-		return nil, updateErr
+	if err != nil {
+		return nil, err
 	}
 
 	return &dto.UpdateWorkspaceResponse{

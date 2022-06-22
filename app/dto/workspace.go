@@ -6,8 +6,8 @@ import (
 )
 
 type CreateWorkspacePayload struct {
-	Name      string `json:"name,omitempty"`
-	IsPrivate bool   `json:"isPrivate,omitempty"`
+	Name      string `json:"name"`
+	IsPrivate bool   `json:"isPrivate"`
 }
 
 func (p *CreateWorkspacePayload) Validate() error {

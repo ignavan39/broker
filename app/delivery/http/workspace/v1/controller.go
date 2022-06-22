@@ -10,6 +10,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+
+	blogger "github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -69,6 +71,7 @@ func (c *Controller) GetManyByUser(w http.ResponseWriter, r *http.Request) {
 
 	res, err := c.workspaceService.GetManyByUserID(userID) //TODO: переименовать
 	if err != nil {
+		blogger.Error(err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -81,12 +84,21 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 
 	workspaceID := chi.URLParam(r, "workspaceID")
 
+	if len(workspaceID) == 0 {
+		httpext.AbortJSON(w, service.EmptyIDHTTPAddressErr.Error(), http.StatusMethodNotAllowed)
+	}
+
 	userID := middleware.GetUserIdFromContext(ctx)
 
 	err := c.workspaceService.Delete(userID, workspaceID)
 
-	if(err != nil) {
-		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+	if err != nil {
+		if errors.Is(err, service.WorkspaceNotExistsErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		blogger.Error(err)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -104,24 +116,32 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = payload.Validate()
-	if err != nil {
+	if err = payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	workspaceID := chi.URLParam(r, "workspaceID")
 
+	if len(workspaceID) == 0 {
+		httpext.AbortJSON(w, service.EmptyIDHTTPAddressErr.Error(), http.StatusMethodNotAllowed)
+		return
+	}
+
 	userID := middleware.GetUserIdFromContext(ctx)
 
 	res, err := c.workspaceService.Update(payload, workspaceID, userID)
 
 	if err != nil {
-		if errors.Is(err, service.DuplicateWorkspaceEmailErr) ||
-			errors.Is(err, service.WorkspaceNotExistsErr) {
+		if errors.Is(err, service.WorkspaceNotExistsErr) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if errors.Is(err, service.WorkspaceAccessDeniedErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		blogger.Error(err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -77,7 +77,7 @@ func (r *Repository) Update(workspaceID string, name *string, isPrivate *bool) (
 	qb := sq.Update("workspaces")
 
 	if name != nil {
-		qb =qb.Set("name", *name)
+		qb = qb.Set("name", *name)
 	}
 
 	if isPrivate != nil {
@@ -91,7 +91,7 @@ func (r *Repository) Update(workspaceID string, name *string, isPrivate *bool) (
 
 	if err := row.Scan(&workspace.ID, &workspace.Name, &workspace.CreatedAt, &workspace.IsPrivate); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, service.WorkspaceNotExistsErr
+			return nil, service.WorkspaceAccessDeniedErr
 		}
 
 		return nil, err
@@ -130,7 +130,7 @@ func (r *Repository) GetManyByUserId(id string) ([]models.Workspace, error) {
 	return workspaces, nil
 }
 
-func (r *Repository) GetAccessByUserId(userID string, workspaceID string) (*models.Workspace, error) {
+func (r *Repository) GetWorkspaceByUserId(userID string, workspaceID string) (*models.Workspace, error) {
 	var workspace models.Workspace
 
 	row := sq.Select("w.id", "w.name", "w.created_at", "w.is_private").
