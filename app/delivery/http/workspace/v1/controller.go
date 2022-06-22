@@ -37,8 +37,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = payload.Validate()
-	if err != nil {
+	if err = payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -57,6 +56,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		blogger.Errorf("[Create] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -71,7 +71,7 @@ func (c *Controller) GetManyByUser(w http.ResponseWriter, r *http.Request) {
 
 	res, err := c.workspaceService.GetManyByUserID(userID) //TODO: переименовать
 	if err != nil {
-		blogger.Error(err)
+		blogger.Errorf("[GetManyByUser] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -85,7 +85,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	workspaceID := chi.URLParam(r, "workspaceID")
 
 	if len(workspaceID) == 0 {
-		httpext.AbortJSON(w, service.EmptyIDHTTPAddressErr.Error(), http.StatusMethodNotAllowed)
+		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
 	}
 
 	userID := middleware.GetUserIdFromContext(ctx)
@@ -97,7 +97,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		blogger.Error(err)
+		blogger.Errorf("[Delete] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -124,7 +124,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 	workspaceID := chi.URLParam(r, "workspaceID")
 
 	if len(workspaceID) == 0 {
-		httpext.AbortJSON(w, service.EmptyIDHTTPAddressErr.Error(), http.StatusMethodNotAllowed)
+		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Error(err)
+		blogger.Errorf("[Update] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

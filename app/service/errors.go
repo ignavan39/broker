@@ -10,5 +10,5 @@ var (
 	DuplicateWorkspaceEmailErr = errors.New("Duplicate user in workspace")
 	WorkspaceNotExistsErr      = errors.New("Workspace didn`t exist")
 	WorkspaceAccessDeniedErr   = errors.New("Workspace access denied")
-	EmptyIDHTTPAddressErr      = errors.New("Invalid ID in http address")
+	EmptyUrlParamsErr          = errors.New("Empty URL parameters in http address")
 )
