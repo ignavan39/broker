@@ -2,11 +2,12 @@ package delivery
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/rs/cors"
+
+	blogger "github.com/sirupsen/logrus"
 )
 
 type Server struct {
@@ -47,6 +48,6 @@ func (a *Server) Stop() {
 	a.srv.Shutdown(context.Background())
 }
 func (a *Server) WaitForDone() error {
-	log.Println("Server has been started")
+	blogger.Info("Server has been started")
 	return <-a.done
 }

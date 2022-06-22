@@ -56,6 +56,50 @@ func (r *Repository) Create(email string, name string, isPrivate bool) (*models.
 	return &workspace, nil
 }
 
+func (r *Repository) Delete(workspaceID string) error {
+	_, err := sq.Delete("workspaces").
+		Where(sq.Eq{"id": workspaceID}).
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return service.WorkspaceAccessDeniedErr
+		}
+		return err
+	}
+	return nil
+}
+
+func (r *Repository) Update(workspaceID string, name *string, isPrivate *bool) (*models.Workspace, error) {
+	var workspace models.Workspace
+
+	qb := sq.Update("workspaces")
+
+	if name != nil {
+		qb = qb.Set("name", *name)
+	}
+
+	if isPrivate != nil {
+		qb = qb.Set("is_private", *isPrivate)
+	}
+	qb = qb.Where(sq.Eq{"id": workspaceID}).
+		Suffix("returning id, name, created_at, is_private").
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar)
+	row := qb.QueryRow()
+
+	if err := row.Scan(&workspace.ID, &workspace.Name, &workspace.CreatedAt, &workspace.IsPrivate); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, service.WorkspaceAccessDeniedErr
+		}
+
+		return nil, err
+	}
+
+	return &workspace, nil
+}
+
 func (r *Repository) GetManyByUserId(id string) ([]models.Workspace, error) {
 	workspaces := make([]models.Workspace, 0)
 
@@ -84,4 +128,27 @@ func (r *Repository) GetManyByUserId(id string) ([]models.Workspace, error) {
 		workspaces = append(workspaces, w)
 	}
 	return workspaces, nil
+}
+
+func (r *Repository) GetWorkspaceByUserId(userID string, workspaceID string) (*models.Workspace, error) {
+	var workspace models.Workspace
+
+	row := sq.Select("w.id", "w.name", "w.created_at", "w.is_private").
+		From("workspaces w").
+		InnerJoin("workspace_accesses wa ON wa.workspace_id = w.id AND wa.type = ?", models.ADMIN).
+		InnerJoin("users u ON u.email = wa.email").
+		Where(sq.Eq{"w.id": workspaceID, "u.id": userID}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+
+	if err := row.Scan(&workspace.ID, &workspace.Name, &workspace.CreatedAt, &workspace.IsPrivate); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, service.WorkspaceAccessDeniedErr
+		}
+
+		return nil, err
+	}
+
+	return &workspace, nil
 }

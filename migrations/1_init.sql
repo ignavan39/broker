@@ -27,7 +27,7 @@ CREATE TYPE workspace_access_type AS ENUM (
 
 CREATE TABLE workspace_accesses (
     id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT workspace_access_pk PRIMARY KEY,
-    workspace_id uuid NOT NULL CONSTRAINT workspace_id_fk REFERENCES workspaces(id),
+    workspace_id uuid NOT NULL CONSTRAINT workspace_id_fk REFERENCES workspaces(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     "type" workspace_access_type NOT NULL DEFAULT 'USER'
 );
@@ -38,13 +38,13 @@ CREATE TABLE peers (
     id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT peer_pk PRIMARY KEY,
     "name" TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    workspace_id uuid NOT NULL CONSTRAINT peer_workspace_id_fk REFERENCES workspaces(id)
+    workspace_id uuid NOT NULL CONSTRAINT peer_workspace_id_fk REFERENCES workspaces(id) ON DELETE CASCADE
 );
 
 CREATE TABLE user_peers (
     id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT user_peers_pk PRIMARY KEY,
-    user_id uuid NOT NULL CONSTRAINT user_peers_user_id_fk REFERENCES users(id),
-    peer_id uuid NOT NULL CONSTRAINT user_peers_peer_id_fk REFERENCES peers(id),
+    user_id uuid NOT NULL CONSTRAINT user_peers_user_id_fk REFERENCES users(id) ON DELETE CASCADE,
+    peer_id uuid NOT NULL CONSTRAINT user_peers_peer_id_fk REFERENCES peers(id) ON DELETE CASCADE,
     is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -57,8 +57,8 @@ CREATE TABLE messages (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP DEFAULT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    user_id uuid NOT NULL CONSTRAINT messages_user_id_fk REFERENCES users(id),
-    peer_id uuid NOT NULL CONSTRAINT messages_peer_id_fk REFERENCES peers(id),
+    user_id uuid NOT NULL CONSTRAINT messages_user_id_fk REFERENCES users(id) ON DELETE CASCADE,
+    peer_id uuid NOT NULL CONSTRAINT messages_peer_id_fk REFERENCES peers(id) ON DELETE CASCADE,
     "text" TEXT NOT NULL,
     parent_id uuid DEFAULT NULL CONSTRAINT messages_parent_fk REFERENCES messages(id)
 );
