@@ -71,5 +71,5 @@ type PeerResponse struct {
 type GetWorkspaceInfoResponse struct {
 	Name       string         `json:"name"`
 	Peers      []PeerResponse `json:"peers"`
-	UsersCount int8           `json:"usersCount"`
+	UsersCount int            `json:"usersCount"`
 }

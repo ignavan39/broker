@@ -2,7 +2,6 @@ package peer
 
 import (
 	"broker/app/models"
-	"broker/app/service"
 	"broker/pkg/pg"
 	"database/sql"
 	"errors"
@@ -34,7 +33,7 @@ func (r *Repository) GetMany(userID string, workspaceID string) ([]models.Peer, 
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return peers, service.WorkspaceNotExistsErr
+			return peers, nil
 		}
 		return peers, err
 	}

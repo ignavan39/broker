@@ -2,7 +2,10 @@ package workspace
 
 import (
 	"broker/app/dto"
+	"broker/app/models"
 	"broker/app/repository"
+	"broker/app/service"
+	"strings"
 )
 
 type WorkspaceService struct {
@@ -57,7 +60,17 @@ func (s *WorkspaceService) Delete(userID string, workspaceID string) error {
 }
 
 func (s *WorkspaceService) Update(payload dto.UpdateWorkspacePayload, workspaceID string, userID string) (*dto.UpdateWorkspaceResponse, error) {
-	_, err := s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
+	accessType, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.Compare(*accessType, models.ADMIN) == 0 {
+		return nil, service.WorkspaceAccessDeniedErr
+	}
+
+	_, err = s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
 
 	if err != nil {
 		return nil, err
