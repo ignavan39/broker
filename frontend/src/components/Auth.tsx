@@ -87,14 +87,14 @@ type AuthProp = {
 
 export const Auth = (prop: AuthProp) => {
   const [err, setErr] = useState<string | null>(null);
-  const [errorPopupState,setOpenPopupState] = useState<boolean>(false)
+  const [errorPopupState, setOpenPopupState] = useState<boolean>(false);
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
-    password: user.password ?? "",
-    email: user.email ?? "",
-    firstName: !prop.register ? user.firstName ?? "" : "",
-    lastName: !prop.register ? user.lastName ?? "" : "",
-    nickname: !prop.register ? user.nickname ?? "" : "",
+    password: user.user.password ?? "",
+    email: user.user.email ?? "",
+    firstName: !prop.register ? user.user.firstName ?? "" : "",
+    lastName: !prop.register ? user.user.lastName ?? "" : "",
+    nickname: !prop.register ? user.user.nickname ?? "" : "",
   });
   const navigate = useNavigate();
 
@@ -109,27 +109,23 @@ export const Auth = (prop: AuthProp) => {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      let apiResponse = await sign(state, prop.register ? "signUp" : "signIn");
-      const newUser: User = {
-        ...user,
-        ...state,
-        auth: {
-          accessToken: apiResponse.auth.accessToken,
-          refreshToken: apiResponse.auth.refreshToken,
-        },
-      };
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
+      const apiResponse = await sign(state, prop.register ? "signUp" : "signIn");
+      setUser(apiResponse);
+      localStorage.setItem("user", JSON.stringify(apiResponse));
       navigate("/");
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'unknown error' 
-      setOpenPopupState(true)
+      const message = e instanceof Error ? e.message : "unknown error";
+      setOpenPopupState(true);
       setErr(message);
     }
   };
   return (
     <Container>
-      {errorPopupState && err ? (<ErrorPopup err={err} setOpen={setOpenPopupState}/>) : (<></>)}
+      {errorPopupState && err ? (
+        <ErrorPopup err={err} setOpen={setOpenPopupState} />
+      ) : (
+        <></>
+      )}
       <Form onSubmit={onSubmit}>
         {prop.register ? <Header>Register</Header> : <Header>Login</Header>}
         <FormInput>

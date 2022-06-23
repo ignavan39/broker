@@ -11,7 +11,7 @@ const Container = styled.div`
   justify-content: right;
   align-items: center;
   background-color: #e3e3e3;
-  margin:0;
+  margin: 0;
 `;
 const UserInfo = styled.button`
   display: flex;
@@ -76,12 +76,16 @@ export const Navbar = () => {
       <UserInfo>
         <Avatar>
           <img
-            src="https://vk.com/images/camera_c.gif"
+            src={
+              user.user.avatarUrl && user.user.avatarUrl.length
+                ? user.user.avatarUrl
+                : "https://vk.com/images/camera_c.gif"
+            }
             width="50"
             height="50"
           />
         </Avatar>
-        <div>{user.firstName + " " + user.lastName}</div>
+        <div>{user.user.firstName + " " + user.user.lastName}</div>
       </UserInfo>
       <Logout onClick={logout}>Logout</Logout>
     </Container>
