@@ -26,7 +26,7 @@ func (rt Router) InitRoutes(r chi.Router) {
 			r.Post("/create", rt.controller.Create)
 			r.Delete("/{workspaceID}", rt.controller.Delete)
 			r.Patch("/{workspaceID}", rt.controller.Update)
-			r.Get("/getWorkspace/{workspaceID}", rt.controller.GetWorkspaceInfo)
+			r.Get("/info/{workspaceID}", rt.controller.GetWorkspaceInfo)
 		})
 	})
 }
