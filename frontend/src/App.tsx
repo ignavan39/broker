@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { RecoilRoot, useRecoilValue } from "recoil";
 import { Auth } from "./components/Auth";
 import { Home } from "./components/Home";
-import { Workspace } from "./components/Workspaces";
+import { Workspaces } from "./components/Workspaces";
 import { userIsLoggined } from "./state/User.state";
 
 const BaseRouter = () => {
@@ -14,8 +14,11 @@ const BaseRouter = () => {
       <Routes>
         <Route path="/auth" element={<Auth register={false} />} />
         <Route path="/register" element={<Auth register={true} />} />
-        <Route path="*" element={isLoggined? <Home/> : <Navigate to='/' />} />
-        <Route path="/" element={isLoggined? <Workspace/> : <Navigate to='/auth' />} />
+        <Route path="*" element={isLoggined ? <Home /> : <Navigate to="/" />} />
+        <Route
+          path="/"
+          element={isLoggined ? <Workspaces /> : <Navigate to="/auth" />}
+        />
       </Routes>
     </BrowserRouter>
   );

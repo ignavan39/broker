@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
@@ -106,11 +106,48 @@ export const Auth = (prop: AuthProp) => {
     });
   };
 
+  useEffect(() => {
+    (async () => {
+      try {
+        if (user.user.password.length && user.user.email.length) {
+          const apiResponse = await sign(
+            { password: user.user.password, email: user.user.email },
+            "signIn"
+          );
+          const updatedUser: User = {
+            ...apiResponse,
+            user: {
+              ...apiResponse.user,
+              password: state.password,
+            },
+          };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          navigate("/");
+        }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "unknown error";
+        setOpenPopupState(true);
+        setErr(message);
+      }
+    })();
+  }, []);
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const apiResponse = await sign(state, prop.register ? "signUp" : "signIn");
-      setUser(apiResponse);
+      const apiResponse = await sign(
+        state,
+        prop.register ? "signUp" : "signIn"
+      );
+      const updatedUser: User = {
+        ...apiResponse,
+        user: {
+          ...apiResponse.user,
+          password: state.password,
+        },
+      };
+      setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(apiResponse));
       navigate("/");
     } catch (e) {

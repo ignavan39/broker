@@ -1,3 +1,4 @@
+import axios from "axios";
 import { atom, selector } from "recoil";
 import { User } from "../types/User";
 
@@ -19,7 +20,10 @@ const getDefaultUser = (): User => {
       },
     };
   } else {
-    return JSON.parse(cache) as User;
+    const user = JSON.parse(cache) as User;
+    axios.defaults.headers.common["Authorization"] =
+      "Bearer " + user.auth.accessToken;
+    return user;
   }
 };
 
