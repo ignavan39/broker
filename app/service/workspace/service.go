@@ -2,21 +2,27 @@ package workspace
 
 import (
 	"broker/app/dto"
+	"broker/app/models"
 	"broker/app/repository"
+	"broker/app/service"
+	"strings"
 )
 
 type WorkspaceService struct {
 	workspaceRepository repository.WorkspaceRepository
 	userRepository      repository.UserRepository
+	peerRepository      repository.PeerRepository
 }
 
 func NewWorkspaceService(
 	workspaceRepository repository.WorkspaceRepository,
 	userRepository repository.UserRepository,
+	peerRepository repository.PeerRepository,
 ) *WorkspaceService {
 	return &WorkspaceService{
 		workspaceRepository: workspaceRepository,
 		userRepository:      userRepository,
+		peerRepository:      peerRepository,
 	}
 }
 
@@ -54,7 +60,17 @@ func (s *WorkspaceService) Delete(userID string, workspaceID string) error {
 }
 
 func (s *WorkspaceService) Update(payload dto.UpdateWorkspacePayload, workspaceID string, userID string) (*dto.UpdateWorkspaceResponse, error) {
-	_, err := s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
+	accessType, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.Compare(*accessType, models.ADMIN) == 0 {
+		return nil, service.WorkspaceAccessDeniedErr
+	}
+
+	_, err = s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
 
 	if err != nil {
 		return nil, err
@@ -83,5 +99,42 @@ func (s *WorkspaceService) GetManyByUserID(userId string) (*dto.GetManyByUserRes
 
 	return &dto.GetManyByUserResponse{
 		Workspaces: workspaces,
+	}, nil
+}
+
+func (s *WorkspaceService) GetWorkspaceInfo(userID string, workspaceID string) (*dto.GetWorkspaceInfoResponse, error) {
+	workspace, err := s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	peers, err := s.peerRepository.GetMany(userID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	usersCount, err := s.workspaceRepository.GetWorkspaceUsersCount(userID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dtoPeers := make([]dto.PeerResponse, 0)
+
+	for _, peer := range peers {
+		dtoPeer := dto.PeerResponse{
+			Id:   peer.ID,
+			Name: peer.Name,
+		}
+
+		dtoPeers = append(dtoPeers, dtoPeer)
+	}
+
+	return &dto.GetWorkspaceInfoResponse{
+		Name:       workspace.Name,
+		Peers:      dtoPeers,
+		UsersCount: usersCount,
 	}, nil
 }

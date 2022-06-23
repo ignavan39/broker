@@ -144,3 +144,30 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 
 	httpext.JSON(w, res, http.StatusOK)
 }
+
+func (c *Controller) GetWorkspaceInfo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	workspaceID := chi.URLParam(r, "workspaceID")
+
+	if len(workspaceID) == 0 {
+		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	response, err := c.workspaceService.GetWorkspaceInfo(userID, workspaceID)
+
+	if err != nil {
+		if errors.Is(err, service.WorkspaceAccessDeniedErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		blogger.Errorf("[GetWorkspaceInfo] Error: %s", err)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.JSON(w, response, http.StatusOK)
+}

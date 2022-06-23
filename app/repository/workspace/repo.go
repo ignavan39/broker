@@ -119,8 +119,10 @@ func (r *Repository) GetManyByUserId(id string) ([]models.Workspace, error) {
 	}
 
 	defer rows.Close()
+
 	for rows.Next() {
 		var w models.Workspace
+
 		if err := rows.Scan(&w.ID, &w.Name, &w.CreatedAt, &w.IsPrivate); err != nil {
 			return nil, err
 		}
@@ -135,7 +137,7 @@ func (r *Repository) GetWorkspaceByUserId(userID string, workspaceID string) (*m
 
 	row := sq.Select("w.id", "w.name", "w.created_at", "w.is_private").
 		From("workspaces w").
-		InnerJoin("workspace_accesses wa ON wa.workspace_id = w.id AND wa.type = ?", models.ADMIN).
+		InnerJoin("workspace_accesses wa ON wa.workspace_id = w.id").
 		InnerJoin("users u ON u.email = wa.email").
 		Where(sq.Eq{"w.id": workspaceID, "u.id": userID}).
 		RunWith(r.pool.Read()).
@@ -151,4 +153,48 @@ func (r *Repository) GetWorkspaceByUserId(userID string, workspaceID string) (*m
 	}
 
 	return &workspace, nil
+}
+
+func (r *Repository) GetAccessByUserId(userID string, workspaceID string) (*string, error) {
+	var accessType string
+
+	row := sq.Select("wa.type").
+		From("workspace_accesses wa").
+		InnerJoin("users u ON u.email = wa.email").
+		Where(sq.Eq{"u.id": userID, "wa.workspace_id": workspaceID}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+
+	if err := row.Scan(&accessType); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, service.WorkspaceAccessDeniedErr
+		}
+
+		return nil, err
+	}
+
+	return &accessType, nil
+}
+
+func (r *Repository) GetWorkspaceUsersCount(userID string, workspaceID string) (int, error) {
+	var usersCount int
+
+	row := sq.Select("COUNT(*)").
+		From("workspace_accesses wa").
+		InnerJoin("users u ON u.email = wa.email").
+		Where(sq.Eq{"wa.workspace_id": workspaceID, "u.id": userID}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+
+	if err := row.Scan(&usersCount); err != nil {
+		return 0, err
+	}
+
+	if usersCount == 0 {
+		return usersCount, service.WorkspaceAccessDeniedErr
+	}
+
+	return usersCount, nil
 }

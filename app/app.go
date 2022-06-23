@@ -7,6 +7,7 @@ import (
 	"broker/app/delivery/http/middleware"
 	"broker/app/delivery/http/peer/v1"
 	"broker/app/delivery/http/workspace/v1"
+	peerRepo "broker/app/repository/peer"
 	userRepo "broker/app/repository/user"
 	workspaceRepo "broker/app/repository/workspace"
 	authSrv "broker/app/service/auth"
@@ -81,7 +82,8 @@ func NewApp(config config.Config) *App {
 	peerPublisher := peerPublisherAmqp.NewPublisher(amqpConn)
 
 	workspaceRepo := workspaceRepo.NewRepository(pgConn)
-	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo)
+	peerRepo := peerRepo.NewRepository(pgConn)
+	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo, peerRepo)
 	workspaceController := workspace.NewController(workspaceService)
 
 	authGuard := middleware.NewAuthGuard(authService)

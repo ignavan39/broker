@@ -62,3 +62,14 @@ func (p *UpdateWorkspacePayload) Validate() error {
 }
 
 type UpdateWorkspaceResponse = models.Workspace
+
+type PeerResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type GetWorkspaceInfoResponse struct {
+	Name       string         `json:"name"`
+	Peers      []PeerResponse `json:"peers"`
+	UsersCount int            `json:"usersCount"`
+}
