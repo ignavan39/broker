@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { sign } from "../api";
 import { userState } from "../state/User.state";
 import { User } from "../types/User";
+import { ErrorPopup } from "./ErrorPopup";
 const Container = styled.div`
   display: flex;
   justify-content: center;
@@ -85,6 +86,7 @@ type AuthProp = {
 };
 
 export const Auth = (prop: AuthProp) => {
+  const [err, setErr] = useState<string | null>(null);
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
     password: user.password ?? "",
@@ -105,21 +107,27 @@ export const Auth = (prop: AuthProp) => {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let apiResponse = await sign(state, prop.register ? "signUp" : "signIn");
-    const newUser: User = {
-      ...user,
-      ...state,
-      auth: {
-        accessToken: apiResponse.auth.accessToken,
-        refreshToken: apiResponse.auth.refreshToken,
-      },
-    };
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    navigate("/");
+    try {
+      let apiResponse = await sign(state, prop.register ? "signUp" : "signIn");
+      const newUser: User = {
+        ...user,
+        ...state,
+        auth: {
+          accessToken: apiResponse.auth.accessToken,
+          refreshToken: apiResponse.auth.refreshToken,
+        },
+      };
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
+      navigate("/");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'unknown error' 
+      setErr(message);
+    }
   };
   return (
     <Container>
+      {err ? (<ErrorPopup err={err}/>) : (<></>)}
       <Form onSubmit={onSubmit}>
         {prop.register ? <Header>Register</Header> : <Header>Login</Header>}
         <FormInput>
@@ -140,7 +148,7 @@ export const Auth = (prop: AuthProp) => {
           />
           {prop.register ? (
             <>
-               <Input
+              <Input
                 type={"text"}
                 minLength={1}
                 placeholder="Nickname"
