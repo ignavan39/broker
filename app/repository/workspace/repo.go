@@ -146,7 +146,7 @@ func (r *Repository) GetWorkspaceByUserId(userID string, workspaceID string) (*m
 
 	if err := row.Scan(&workspace.ID, &workspace.Name, &workspace.CreatedAt, &workspace.IsPrivate); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, service.WorkspaceNotExistsErr
+			return nil, service.WorkspaceAccessDeniedErr
 		}
 
 		return nil, err
@@ -168,7 +168,7 @@ func (r *Repository) GetAccessByUserId(userID string, workspaceID string) (*stri
 
 	if err := row.Scan(&accessType); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, service.WorkspaceNotExistsErr
+			return nil, service.WorkspaceAccessDeniedErr
 		}
 
 		return nil, err
@@ -193,7 +193,7 @@ func (r *Repository) GetWorkspaceUsersCount(userID string, workspaceID string) (
 	}
 
 	if usersCount == 0 {
-		return usersCount, service.WorkspaceNotExistsErr
+		return usersCount, service.WorkspaceAccessDeniedErr
 	}
 
 	return usersCount, nil

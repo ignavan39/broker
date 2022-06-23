@@ -160,8 +160,8 @@ func (c *Controller) GetWorkspaceInfo(w http.ResponseWriter, r *http.Request) {
 	response, err := c.workspaceService.GetWorkspaceInfo(userID, workspaceID)
 
 	if err != nil {
-		if errors.Is(err, service.WorkspaceNotExistsErr) {
-			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, service.WorkspaceAccessDeniedErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
 		blogger.Errorf("[GetWorkspaceInfo] Error: %s", err)
