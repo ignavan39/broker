@@ -43,7 +43,7 @@ func (r *Repository) GetMany(userID string, workspaceID string) ([]models.Peer, 
 	for rows.Next() {
 		var p models.Peer
 
-		if err := rows.Scan(&p.ID, p.Name, p.CreatedAt, p.WorkspaceId); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.CreatedAt, &p.WorkspaceId); err != nil {
 			return nil, err
 		}
 

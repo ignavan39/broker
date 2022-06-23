@@ -166,6 +166,7 @@ func (c *Controller) GetWorkspaceInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		blogger.Errorf("[GetWorkspaceInfo] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	httpext.JSON(w, response, http.StatusOK)
