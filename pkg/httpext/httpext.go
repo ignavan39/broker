@@ -18,3 +18,7 @@ func AbortJSON(w http.ResponseWriter, err string, code int) {
 		Error: err,
 	})
 }
+
+func EmptyResponse(w http.ResponseWriter, code int) {
+	w.WriteHeader(code)
+}

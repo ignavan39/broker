@@ -45,3 +45,31 @@ type CreateWorkspaceConnectionResponse struct {
 	Consume CreateWorkspaceConnectionBase `json:"consume"`
 	Publish CreateWorkspaceConnectionBase `json:"publish"`
 }
+type UpdateWorkspacePayload struct {
+	Name      *string `json:"name,omitempty"`
+	IsPrivate *bool   `json:"isPrivate,omitempty"`
+}
+
+func (p *UpdateWorkspacePayload) Validate() error {
+	if p.Name == nil && p.IsPrivate == nil {
+		return errors.New("one of the field must be not empty")
+	}
+
+	if p.Name != nil && len(*p.Name) == 0 {
+		return errors.New("workspace name must be not empty string")
+	}
+	return nil
+}
+
+type UpdateWorkspaceResponse = models.Workspace
+
+type PeerResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type GetWorkspaceInfoResponse struct {
+	Name       string         `json:"name"`
+	Peers      []PeerResponse `json:"peers"`
+	UsersCount int8           `json:"usersCount"`
+}

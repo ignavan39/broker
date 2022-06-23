@@ -7,6 +7,7 @@ import (
 	"broker/app/delivery/http/middleware"
 	"broker/app/delivery/http/peer/v1"
 	"broker/app/delivery/http/workspace/v1"
+	peerRepo "broker/app/repository/peer"
 	userRepo "broker/app/repository/user"
 	workspaceRepo "broker/app/repository/workspace"
 	authSrv "broker/app/service/auth"
@@ -21,7 +22,6 @@ import (
 
 	"broker/pkg/pg"
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,6 +30,8 @@ import (
 
 	chim "github.com/go-chi/chi/middleware"
 	"github.com/streadway/amqp"
+
+	blogger "github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -45,10 +47,10 @@ func NewApp(config config.Config) *App {
 
 	pgConn, err := pg.NewReadAndWriteConnection(ctx, a.config.Database, a.config.Database, nil)
 	if err != nil {
-		log.Fatalln(err)
+		blogger.Fatalln(err)
 	}
 
-	log.Println("Database connection established")
+	blogger.Info("Database connection established")
 
 	connStr := fmt.Sprintf("amqp://%s:%s@%s:%d", config.AMQP.User, config.AMQP.Pass, config.AMQP.Host, config.AMQP.Port)
 	fmt.Println(connStr)
@@ -59,11 +61,11 @@ func NewApp(config config.Config) *App {
 		time.Sleep(10 * time.Second)
 		amqpConn, err = amqp.Dial(connStr)
 		if err != nil {
-			log.Fatalln(err)
+			blogger.Fatalln(err)
 		}
 	}
 
-	log.Println("AMQP connection established")
+	blogger.Info("AMQP connection established")
 
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
@@ -74,13 +76,14 @@ func NewApp(config config.Config) *App {
 
 	peerConsumer := peerConsumerAmqp.NewConsumer(amqpConn)
 	if err := peerConsumer.Init(); err != nil {
-		log.Fatalln(err)
+		blogger.Fatalln(err)
 	}
 
 	peerPublisher := peerPublisherAmqp.NewPublisher(amqpConn)
 
 	workspaceRepo := workspaceRepo.NewRepository(pgConn)
-	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo)
+	peerRepo := peerRepo.NewRepository(pgConn)
+	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo, peerRepo)
 	workspaceController := workspace.NewController(workspaceService)
 
 	authGuard := middleware.NewAuthGuard(authService)
@@ -105,15 +108,15 @@ func NewApp(config config.Config) *App {
 
 func (a *App) Run() {
 	if err := a.web.Start(); err != nil {
-		log.Fatal(err)
+		blogger.Fatal(err)
 	}
 	appCloser := make(chan os.Signal)
 	signal.Notify(appCloser, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-appCloser
-		log.Println("[os.SIGNAL] close request")
+		blogger.Info("[os.SIGNAL] close request")
 		go a.web.Stop()
-		log.Println("[os.SIGNAL] done")
+		blogger.Info("[os.SIGNAL] done")
 	}()
 	a.web.WaitForDone()
 }
