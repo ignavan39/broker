@@ -87,6 +87,7 @@ type AuthProp = {
 
 export const Auth = (prop: AuthProp) => {
   const [err, setErr] = useState<string | null>(null);
+  const [errorPopupState,setOpenPopupState] = useState<boolean>(false)
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
     password: user.password ?? "",
@@ -122,12 +123,13 @@ export const Auth = (prop: AuthProp) => {
       navigate("/");
     } catch (e) {
       const message = e instanceof Error ? e.message : 'unknown error' 
+      setOpenPopupState(true)
       setErr(message);
     }
   };
   return (
     <Container>
-      {err ? (<ErrorPopup err={err}/>) : (<></>)}
+      {errorPopupState && err ? (<ErrorPopup err={err} setOpen={setOpenPopupState}/>) : (<></>)}
       <Form onSubmit={onSubmit}>
         {prop.register ? <Header>Register</Header> : <Header>Login</Header>}
         <FormInput>
