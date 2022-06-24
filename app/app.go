@@ -4,6 +4,7 @@ import (
 	"broker/app/config"
 	delivery "broker/app/delivery/http"
 	"broker/app/delivery/http/auth/v1"
+	"broker/app/delivery/http/invitation/v1"
 	"broker/app/delivery/http/middleware"
 	"broker/app/delivery/http/peer/v1"
 	"broker/app/delivery/http/workspace/v1"
@@ -11,6 +12,7 @@ import (
 	userRepo "broker/app/repository/user"
 	workspaceRepo "broker/app/repository/workspace"
 	authSrv "broker/app/service/auth"
+	invitationSrv "broker/app/service/invitation"
 	workspaceSrv "broker/app/service/workspace"
 
 	peerSrv "broker/app/service/peer"
@@ -94,6 +96,10 @@ func NewApp(config config.Config) *App {
 	peerController := peer.NewController(peerService)
 	peerRouter := peer.NewRouter(peerController, authGuard)
 
+	invitationService := invitationSrv.NewInvitationService(userRepo, workspaceRepo)
+	invitationController := invitation.NewController(invitationService)
+	invitationRouter := invitation.NewRouter(invitationController, *authGuard)
+
 	a.web.Router().Route("/api/v1", func(v1 chi.Router) {
 		v1.Use(
 			chim.Logger,
@@ -102,6 +108,7 @@ func NewApp(config config.Config) *App {
 		authRouter.InitRoutes(v1)
 		workspaceRouter.InitRoutes(v1)
 		peerRouter.InitRoutes(v1)
+		invitationRouter.InitRoutes(v1)
 	})
 	return a
 }

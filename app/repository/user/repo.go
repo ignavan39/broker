@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
+	blogger "github.com/sirupsen/logrus"
 )
 
 type Repository struct {
@@ -97,4 +98,111 @@ func (r *Repository) GetEmailById(userId string) (string, error) {
 	}
 
 	return email, nil
+}
+
+func (r *Repository) CheckInvites(userID string, email string) error {
+	rows, err := sq.Update("invitations").
+		Set("status", models.ACCEPTED).
+		Where(sq.Eq{"ricipient_email": email}).
+		Suffix("returning workspace_id").
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar).
+		Query()
+
+	blogger.Println("update")
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+
+		return err
+	}
+
+	defer rows.Close()
+
+	blogger.Println("Before loop")
+	for rows.Next() {
+		var workspace_id string
+
+		blogger.Println("rows.Next")
+
+		if err := rows.Scan(&workspace_id); err != nil {
+			return err
+		}
+
+		_, err := sq.Insert("workspace_accesses").
+			Columns("workspace_id", "user_id").
+			Values(workspace_id, userID).
+			RunWith(r.pool.Write()).
+			PlaceholderFormat(sq.Dollar).
+			Exec()
+		if err != nil {
+			duplicate := strings.Contains(err.Error(), "duplicate")
+
+			if duplicate {
+				return service.DuplicateWorkspaceAccessErr
+			}
+
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipientEmail string) (*models.Invitation, error) {
+	var invitation models.Invitation
+
+	row := sq.Insert("invitations").
+		Columns("sender_id", "ricipient_email", "workspace_id").
+		Values(senderID, ricipientEmail, workspaceID).
+		Suffix("returning id, sender_id, ricipient_email, workspace_id, status").
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+
+	if err := row.Scan(&invitation.ID, &invitation.SenderID, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
+		duplicate := strings.Contains(err.Error(), "duplicate")
+
+		if duplicate {
+			return nil, service.DuplicateInvitationErr
+		}
+
+		return nil, err
+	}
+
+	return &invitation, nil
+}
+
+func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID string) ([]models.Invitation, error) {
+	invitations := make([]models.Invitation, 0)
+
+	rows, err := sq.Select("i.id", "i.sender_id", "i.ricipient_email", "i.workspace_id", "i.status").
+		From("invitations i").
+		InnerJoin("workspace_accesses wa ON wa.workspace_id = i.workspace_id").
+		InnerJoin("users u ON wa.user_id = u.id").
+		Where(sq.Eq{"u.id": userID, "i.workspace_id": workspaceID}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		Query()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return invitations, nil
+		}
+		return invitations, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var invitation models.Invitation
+
+		if err := rows.Scan(&invitation.ID, &invitation.SenderID, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
+			return nil, err
+		}
+
+		invitations = append(invitations, invitation)
+	}
+
+	return invitations, nil
 }

@@ -21,7 +21,7 @@ func NewRepository(pool pg.Pool) *Repository {
 	}
 }
 
-func (r *Repository) Create(email string, name string, isPrivate bool) (*models.Workspace, error) {
+func (r *Repository) Create(userID string, name string, isPrivate bool) (*models.Workspace, error) {
 	var workspace models.Workspace
 
 	row := sq.Insert("workspaces").
@@ -40,8 +40,8 @@ func (r *Repository) Create(email string, name string, isPrivate bool) (*models.
 	}
 
 	_, err := sq.Insert("workspace_accesses").
-		Columns("workspace_id", "email", `"type"`).
-		Values(workspace.ID, email, models.ADMIN).
+		Columns("workspace_id", "user_id", `"type"`).
+		Values(workspace.ID, userID, models.ADMIN).
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		Exec()
@@ -106,7 +106,7 @@ func (r *Repository) GetManyByUserId(id string) ([]models.Workspace, error) {
 	rows, err := sq.Select("w.id", `w."name"`, "w.created_at", "w.is_private").
 		From("workspaces w").
 		InnerJoin("workspace_accesses wa ON wa.workspace_id = w.id").
-		InnerJoin("users u ON wa.email = u.email").
+		InnerJoin("users u ON wa.user_id = u.id").
 		Where(sq.Eq{"u.id": id}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
@@ -138,7 +138,7 @@ func (r *Repository) GetWorkspaceByUserId(userID string, workspaceID string) (*m
 	row := sq.Select("w.id", "w.name", "w.created_at", "w.is_private").
 		From("workspaces w").
 		InnerJoin("workspace_accesses wa ON wa.workspace_id = w.id").
-		InnerJoin("users u ON u.email = wa.email").
+		InnerJoin("users u ON u.id = wa.user_id").
 		Where(sq.Eq{"w.id": workspaceID, "u.id": userID}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
@@ -160,7 +160,7 @@ func (r *Repository) GetAccessByUserId(userID string, workspaceID string) (*stri
 
 	row := sq.Select("wa.type").
 		From("workspace_accesses wa").
-		InnerJoin("users u ON u.email = wa.email").
+		InnerJoin("users u ON u.id = wa.user_id").
 		Where(sq.Eq{"u.id": userID, "wa.workspace_id": workspaceID}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
@@ -177,13 +177,12 @@ func (r *Repository) GetAccessByUserId(userID string, workspaceID string) (*stri
 	return &accessType, nil
 }
 
-func (r *Repository) GetWorkspaceUsersCount(userID string, workspaceID string) (int, error) {
+func (r *Repository) GetWorkspaceUsersCount(workspaceID string) (int, error) {
 	var usersCount int
 
 	row := sq.Select("COUNT(*)").
 		From("workspace_accesses wa").
-		InnerJoin("users u ON u.email = wa.email").
-		Where(sq.Eq{"wa.workspace_id": workspaceID, "u.id": userID}).
+		Where(sq.Eq{"wa.workspace_id": workspaceID}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()

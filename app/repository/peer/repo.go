@@ -25,7 +25,7 @@ func (r *Repository) GetMany(userID string, workspaceID string) ([]models.Peer, 
 	rows, err := sq.Select("p.id", "p.name", "p.created_at", "wa.workspace_id").
 		From("peers p").
 		InnerJoin("workspace_accesses wa ON wa.workspace_id = p.workspace_id").
-		InnerJoin("users u ON u.email = wa.email").
+		InnerJoin("users u ON u.id = wa.user_id").
 		Where(sq.Eq{"wa.workspace_id": workspaceID, "u.id": userID}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).

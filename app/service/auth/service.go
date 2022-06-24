@@ -41,6 +41,12 @@ func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, erro
 		return nil, err
 	}
 
+	err = a.userRepo.CheckInvites(user.ID, user.Email)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &dto.SignResponse{
 		Auth: auth,
 		User: *user,
