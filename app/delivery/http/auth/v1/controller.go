@@ -24,16 +24,15 @@ func NewController(
 }
 
 func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
-	var payload dto.SignUpPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
 
-	if err != nil {
+	var payload dto.SignUpPayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 	}
 
-	err = payload.Validate()
-	if err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -55,17 +54,16 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
-	var payload dto.SignInPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
 
-	if err != nil {
+	var payload dto.SignInPayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 		return
 	}
 
-	err = payload.Validate()
-	if err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}

@@ -20,11 +20,11 @@ func NewController(peerService service.PeerService) *Controller {
 }
 
 func (c *Controller) CreateConnection(w http.ResponseWriter, r *http.Request) {
-	var payload dto.CreateWorkspaceConnectionPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
 
-	if err != nil {
+	var payload dto.CreateWorkspaceConnectionPayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 	}
 
