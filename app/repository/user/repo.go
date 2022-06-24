@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Repository struct {
@@ -109,7 +108,6 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 		PlaceholderFormat(sq.Dollar).
 		Query()
 
-	blogger.Println("update")
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
@@ -120,11 +118,8 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 
 	defer rows.Close()
 
-	blogger.Println("Before loop")
 	for rows.Next() {
 		var workspace_id string
-
-		blogger.Println("rows.Next")
 
 		if err := rows.Scan(&workspace_id); err != nil {
 			return err

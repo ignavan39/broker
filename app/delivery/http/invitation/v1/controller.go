@@ -27,15 +27,13 @@ func NewController(invitationService service.InvitationService) *Controller {
 func (c *Controller) SendInvitation(w http.ResponseWriter, r *http.Request) {
 	var payload dto.SendInvitationPayload
 
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	ctx := r.Context()
-
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 		return
 	}
+	ctx := r.Context()
 
-	if err = payload.Validate(); err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}

@@ -22,7 +22,7 @@ func (rt Router) InitRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Route("/invitations", func(r chi.Router) {
 			r.Use(rt.authGuard.Next())
-			r.Post("/{workspaceID}", rt.controller.SendInvitation)
+			r.Post("/create/{workspaceID}", rt.controller.SendInvitation)
 			r.Get("/{workspaceID}", rt.controller.GetInvitations)
 		})
 	})
