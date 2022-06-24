@@ -24,6 +24,12 @@ func NewRepository(pool pg.Pool) *Repository {
 func (r *Repository) Create(userID string, name string, isPrivate bool) (*models.Workspace, error) {
 	var workspace models.Workspace
 
+	tx, err := r.pool.Write().Begin()
+
+	if err != nil {
+		return nil, err
+	}
+
 	row := sq.Insert("workspaces").
 		Columns("name", "is_private").
 		Values(name, isPrivate).
@@ -36,10 +42,15 @@ func (r *Repository) Create(userID string, name string, isPrivate bool) (*models
 		if duplicate {
 			return nil, service.DuplicateWorkspaceErr
 		}
+
+		if err = tx.Rollback(); err != nil {
+			return nil, err
+		}
+
 		return nil, err
 	}
 
-	_, err := sq.Insert("workspace_accesses").
+	_, err = sq.Insert("workspace_accesses").
 		Columns("workspace_id", "user_id", `"type"`).
 		Values(workspace.ID, userID, models.ADMIN).
 		RunWith(r.pool.Write()).
@@ -50,6 +61,15 @@ func (r *Repository) Create(userID string, name string, isPrivate bool) (*models
 		if duplicate {
 			return nil, service.DuplicateWorkspaceEmailErr
 		}
+
+		if err = tx.Rollback(); err != nil {
+			return nil, err
+		}
+
+		return nil, err
+	}
+
+	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
 

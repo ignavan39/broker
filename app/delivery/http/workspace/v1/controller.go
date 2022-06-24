@@ -30,7 +30,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var payload dto.CreateWorkspacePayload
- 
+
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 		return

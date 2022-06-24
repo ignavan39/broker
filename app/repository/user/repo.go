@@ -100,6 +100,12 @@ func (r *Repository) GetEmailById(userId string) (string, error) {
 }
 
 func (r *Repository) CheckInvites(userID string, email string) error {
+	tx, err := r.pool.Write().Begin()
+
+	if err != nil {
+		return err
+	}
+
 	rows, err := sq.Update("invitations").
 		Set("status", models.ACCEPTED).
 		Where(sq.Eq{"ricipient_email": email}).
@@ -111,6 +117,10 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
+		}
+
+		if err = tx.Rollback(); err != nil {
+			return err
 		}
 
 		return err
@@ -138,8 +148,16 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 				return service.DuplicateWorkspaceAccessErr
 			}
 
+			if err = tx.Rollback(); err != nil {
+				return err
+			}
+
 			return err
 		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
 	}
 
 	return nil
