@@ -29,6 +29,7 @@ func NewAuthService(
 		userRepo:       userRepo,
 	}
 }
+
 func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error) {
 	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
 	if err != nil {
@@ -75,17 +76,30 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 	}, nil
 }
 
+func (a *AuthService) SendVerifyCode(payload dto.SendVerifyCodePayload) error {
+	
+
+	return nil
+}
+
+func (a *AuthService) VerifyCode(payload dto.VerifyCodePayload) error {
+	return nil
+}
+
 func (a *AuthService) refresh(id string) (map[string]string, error) {
 	auth := map[string]string{}
+
 	accessToken, err := a.createToken(id, a.expireDuration)
 	if err != nil {
 		return auth, err
 	}
+
 	auth["accessToken"] = accessToken
 	refreshToken, err := a.createToken(id, time.Duration(24*30))
 	if err != nil {
 		return auth, err
 	}
+
 	auth["refreshToken"] = refreshToken
 	return auth, nil
 }

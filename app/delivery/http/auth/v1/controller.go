@@ -25,9 +25,9 @@ func NewController(
 
 func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 	var payload dto.SignUpPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
 
+	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 	}
@@ -38,7 +38,6 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := c.authService.SignUp(payload)
-
 	if err != nil {
 		if errors.Is(err, service.DuplicateUserErr) {
 			httpext.AbortJSON(w, "user already exists", http.StatusBadRequest)
@@ -55,9 +54,9 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 	var payload dto.SignInPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
 
+	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
 		return
@@ -70,7 +69,6 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := c.authService.SignIn(payload)
-
 	if err != nil {
 		var code int
 		if errors.Is(err, service.UserNotFoundErr) {
@@ -86,4 +84,27 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpext.JSON(w, res, http.StatusOK)
+}
+
+func (c *Controller) VerifyCode(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var payload dto.VerifyCodePayload
+	err := json.NewDecoder(r.Body).Decode(&payload)
+
+	if err != nil {
+		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+	}
+
+	err = payload.Validate()
+	if err != nil {
+		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+	}
+
+	err = c.authService.VerifyCode(payload)
+	if err != nil {
+		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+	}
 }

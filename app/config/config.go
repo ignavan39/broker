@@ -14,9 +14,16 @@ type JWTConfig struct {
 	ExpireDuration time.Duration `env:"EXPIRE_DURATION"`
 }
 
+type MailgunConfig struct {
+	PrivateKey string `env:"MAILGUN_API_KEY"`
+	Domain     string `env:"MAILGUN_DOMAIN"`
+	PublicKey  string `env:"MAILGUN_PUBLIC_KEY"`
+}
+
 type Config struct {
-	JWT      JWTConfig
-	Database pg.Config
+	JWT           JWTConfig
+	Database      pg.Config
+	MailgunConfig MailgunConfig
 }
 
 var config = Config{}
@@ -47,9 +54,16 @@ func Init() error {
 		ExpireDuration: expireDuration,
 	}
 
+	mailgunConfig := MailgunConfig{
+		Domain:     os.Getenv("MAILGUN_DOMAIN"),
+		PrivateKey: os.Getenv("MAILGUN_API_KEY"),
+		PublicKey:  os.Getenv("MAILGUN_PUBLIC_KEY"),
+	}
+
 	config = Config{
-		Database: pgCong,
-		JWT:      jwt,
+		Database:      pgCong,
+		JWT:           jwt,
+		MailgunConfig: mailgunConfig,
 	}
 	return nil
 }

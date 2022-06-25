@@ -61,6 +61,7 @@ services:
         ipv4_address: 171.4.4.11
         aliases:
           - postgres.broker.loc
+  
   redis:
     container_name: redis_broker
     image: redis
@@ -108,6 +109,12 @@ services:
         aliases:
           - app.broker.loc
   
+  broker-mail:
+    container_name: broker-mail
+    depends_on: 
+      - postgres
+    
+
 networks:
   broker:
     name: broker

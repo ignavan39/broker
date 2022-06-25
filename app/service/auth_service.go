@@ -14,5 +14,7 @@ type Claims struct {
 type AuthService interface {
 	SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error)
 	SignIn(payload dto.SignInPayload) (*dto.SignResponse, error)
+	SendVerifyCode(payload dto.SendCodePayload) error
+	VerifyCode(payload dto.VerifyCodePayload) error
 	Validate(jwtToken string) (*Claims, bool)
 }
