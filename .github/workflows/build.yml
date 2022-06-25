@@ -1,0 +1,24 @@
+name: Build and Lint
+
+on:
+  push:
+
+jobs:
+  backend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name : 'Clone repository and checkout'
+        uses: actions/checkout@v3
+      
+      - name: 'Install Go'
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18.0'
+
+      - name: 'Build application'
+        run: |
+          go mod download && go mod verify
+
+          CGO_ENABLED=0 GOOS=linux go build -a \
+          -ldflags '-extldflags "-static"' \
+          -o app ./cmd/core/main.go

@@ -13,6 +13,7 @@ const getDefaultUser = (): User => {
         refreshToken: "",
       },
       password: "",
+      nickname: "",
     };
   } else {
     return JSON.parse(cache) as User;

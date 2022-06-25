@@ -73,6 +73,26 @@ services:
         aliases:
           - redis.broker.loc
 
+  rabbitmq:
+    container_name: rabbitmq-broker
+    build:
+      context: ./
+      dockerfile: ./docker/rabbitmq.dockerfile
+    image: rabbitmq:docker
+    environment:
+      - RABBITMQ_DEFAULT_USER=${AMQP_USER:-user}
+      - RABBITMQ_DEFAULT_PASS=${AMQP_PASS:-pass}
+    ports:
+      - 443:443
+      - 1883:1883
+      - 5672:5672
+      - 15672:15672
+    networks:
+      broker:
+        ipv4_address: 171.4.4.20
+        aliases:
+          - broker.rabbitmq.loc
+
   frontend:
     hostname: "broker-frontend"
     build:

@@ -26,6 +26,7 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	golang.org/x/exp v0.0.0-20210916165020-5cb4fee858ee // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	github.com/streadway/amqp v1.0.0 // indirect
 )
 
 require (

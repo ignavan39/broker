@@ -4,11 +4,24 @@ import (
 	"broker/app/config"
 	delivery "broker/app/delivery/http"
 	"broker/app/delivery/http/auth/v1"
+	"broker/app/delivery/http/middleware"
+	"broker/app/delivery/http/peer/v1"
+	"broker/app/delivery/http/workspace/v1"
+	peerRepo "broker/app/repository/peer"
 	userRepo "broker/app/repository/user"
+	workspaceRepo "broker/app/repository/workspace"
 	authSrv "broker/app/service/auth"
+	workspaceSrv "broker/app/service/workspace"
+
+	peerSrv "broker/app/service/peer"
+
+	peerConsumerAmqp "broker/app/service/peer/consumer/amqp"
+	peerPublisherAmqp "broker/app/service/peer/publisher/amqp"
+	"fmt"
+	"time"
+
 	"broker/pkg/pg"
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,6 +29,9 @@ import (
 	"github.com/go-chi/chi"
 
 	chim "github.com/go-chi/chi/middleware"
+	"github.com/streadway/amqp"
+
+	blogger "github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -31,9 +47,26 @@ func NewApp(config config.Config) *App {
 
 	pgConn, err := pg.NewReadAndWriteConnection(ctx, a.config.Database, a.config.Database, nil)
 	if err != nil {
-		log.Fatalln(err)
+		blogger.Fatalln(err)
 	}
-	log.Println("Database connection established")
+
+	blogger.Info("Database connection established")
+
+	connStr := fmt.Sprintf("amqp://%s:%s@%s:%d", config.AMQP.User, config.AMQP.Pass, config.AMQP.Host, config.AMQP.Port)
+	fmt.Println(connStr)
+
+	amqpConn, err := amqp.Dial(connStr)
+	if err != nil {
+		// hack for await rabbitmq connection
+		time.Sleep(10 * time.Second)
+		amqpConn, err = amqp.Dial(connStr)
+		if err != nil {
+			blogger.Fatalln(err)
+		}
+	}
+
+	blogger.Info("AMQP connection established")
+
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
 	userRepo := userRepo.NewRepository(pgConn)
@@ -41,27 +74,49 @@ func NewApp(config config.Config) *App {
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
 
+	peerConsumer := peerConsumerAmqp.NewConsumer(amqpConn)
+	if err := peerConsumer.Init(); err != nil {
+		blogger.Fatalln(err)
+	}
+
+	peerPublisher := peerPublisherAmqp.NewPublisher(amqpConn)
+
+	workspaceRepo := workspaceRepo.NewRepository(pgConn)
+	peerRepo := peerRepo.NewRepository(pgConn)
+	workspaceService := workspaceSrv.NewWorkspaceService(workspaceRepo, userRepo, peerRepo)
+	workspaceController := workspace.NewController(workspaceService)
+
+	authGuard := middleware.NewAuthGuard(authService)
+
+	workspaceRouter := workspace.NewRouter(workspaceController, *authGuard)
+
+	peerService := peerSrv.NewPeerService(peerConsumer, peerPublisher)
+	peerController := peer.NewController(peerService)
+	peerRouter := peer.NewRouter(peerController, authGuard)
+
 	a.web.Router().Route("/api/v1", func(v1 chi.Router) {
 		v1.Use(
 			chim.Logger,
 			chim.RequestID,
 		)
 		authRouter.InitRoutes(v1)
+		workspaceRouter.InitRoutes(v1)
+		peerRouter.InitRoutes(v1)
 	})
 	return a
 }
 
 func (a *App) Run() {
 	if err := a.web.Start(); err != nil {
-		log.Fatal(err)
+		blogger.Fatal(err)
 	}
 	appCloser := make(chan os.Signal)
 	signal.Notify(appCloser, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-appCloser
-		log.Println("[os.SIGNAL] close request")
+		blogger.Info("[os.SIGNAL] close request")
 		go a.web.Stop()
-		log.Println("[os.SIGNAL] done")
+		blogger.Info("[os.SIGNAL] done")
 	}()
 	a.web.WaitForDone()
 }

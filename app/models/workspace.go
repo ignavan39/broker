@@ -10,13 +10,13 @@ var (
 )
 
 type WorkspaceAccess struct {
-	Id     string                `json:"id"`
+	ID     string                `json:"id"`
 	UserId string                `json:"userId"`
 	Type   WorkspaceAccessesType `json:"type"`
 }
 
 type Workspace struct {
-	Id        string    `json:"id"`
+	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 	IsPrivate bool      `json:"isPrivate"`
