@@ -8,43 +8,59 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type RedisWrapper[T any] struct {
-	exparationTime time.Duration
+const defaultExpirationTime = time.Duration(24 * time.Hour)
+
+type RedisCache[T any] struct {
+	expirationTime time.Duration
 	cache          *redisCache.Cache
 	prefix         string
 }
 
-func newRedisCache[T any](
+func NewRedisCache[T any](
 	redisClient *redis.Client,
-	defaultExparationTime time.Duration,
 	ttl time.Duration,
-	prefix string) *RedisWrapper[T] {
-	return &RedisWrapper[T]{
+	prefix string,
+	size int,
+) *RedisCache[T] {
+	return &RedisCache[T]{
 		cache: redisCache.New(&redisCache.Options{
 			Redis:      redisClient,
-			LocalCache: redisCache.NewTinyLFU(10000, ttl),
+			LocalCache: redisCache.NewTinyLFU(size, ttl),
 		}),
-		exparationTime: defaultExparationTime,
-		prefix:         prefix,
+		prefix: prefix,
+		expirationTime: defaultExpirationTime,
 	}
 }
 
-func (w *RedisWrapper[T]) Set(ctx context.Context, key string, value *T) error {
-	return w.cache.Get()
+func (w *RedisCache[T]) WithExpirationTime(expirationTime time.Duration) *RedisCache[T] {
+	w.expirationTime = expirationTime
+	return w
 }
 
-func (w *RedisWrapper[T]) Get(ctx context.Context, key string) (value *T, err error) {
-	return nil
+func (w *RedisCache[T]) Set(ctx context.Context, key string, value T) error {
+	return w.cache.Set(&redisCache.Item{
+		Ctx:   ctx,
+		Key:   key,
+		Value: value,
+		TTL: w.expirationTime,
+	})
 }
 
-func (w *RedisWrapper[T]) Delete(ctx context.Context, key string) error {
-	return nil
+func (w *RedisCache[T]) Get(ctx context.Context, key string) (*T,error) {
+	var value T
+	err := w.cache.Get(ctx,key,&value)
+
+	return &value, err
 }
 
-func (w *RedisWrapper[T]) Exist() bool {
-	return false
+func (w *RedisCache[T]) Delete(ctx context.Context, key string) error {
+	return w.cache.Delete(ctx,key)
 }
 
-func (w *RedisWrapper[T]) ExparationTime() time.Duration {
-	return time.Since(1)
+func (w *RedisCache[T]) Exist(ctx context.Context, key string) bool {
+	return w.cache.Exists(ctx,key)
+}
+
+func (w *RedisCache[T]) ExpirationTime() time.Duration {
+	return w.expirationTime
 }

@@ -76,16 +76,12 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 	}, nil
 }
 
-func (a *AuthService) SendVerifyCode(payload dto.SendVerifyCodePayload) error {
-	
-
+func (a *AuthService) SendVerifyCode(payload dto.SendCodePayload) error {
 	return nil
 }
-
 func (a *AuthService) VerifyCode(payload dto.VerifyCodePayload) error {
 	return nil
 }
-
 func (a *AuthService) refresh(id string) (map[string]string, error) {
 	auth := map[string]string{}
 

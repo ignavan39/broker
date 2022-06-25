@@ -1,27 +1,36 @@
 package mailer
 
 import (
-	"broker/app/config"
 	"context"
 
 	"github.com/mailgun/mailgun-go/v4"
 )
 
 type MailgunApi struct {
-	mg     *mailgun.MailgunImpl
-	config config.MailgunConfig
+	mg         *mailgun.MailgunImpl
+	privateKey string
+	publicKey  string
+	domain     string
+	sender     string
 }
 
-func NewMailgunApi(config config.Config) *MailgunApi {
-	mg := mailgun.NewMailgun(config.MailgunConfig.Domain, config.MailgunConfig.PrivateKey)
+func NewMailgunApi(
+	privateKey string,
+	publicKey string,
+	domain string,
+	sender string,
+) *MailgunApi {
+	mg := mailgun.NewMailgun(domain, privateKey)
 	return &MailgunApi{
-		mg:     mg,
-		config: config.MailgunConfig,
+		mg:         mg,
+		privateKey: privateKey,
+		publicKey:  publicKey,
+		domain:     domain,
 	}
 }
 
-// func (m *MailgunApi) SendMail(msg string, subject string, recipient string) (string, string, error) {
-// 	ctx := context.Background()
-// 	message := m.mg.NewMessage(m.config.Sender, subject, msg, recipient)
-// 	return m.mg.Send(ctx, message)
-// }
+// return message,message id,error 
+func (m *MailgunApi) SendMail(ctx context.Context, msg string, subject string, recipient string) (string, string, error) {
+	message := m.mg.NewMessage(m.sender, subject, msg, recipient)
+	return m.mg.Send(ctx, message)
+}
