@@ -8,11 +8,11 @@ import { WorkspaceItem } from "./Worpkspace";
 
 const Container = styled.div`
   display: flex;
-  justify-content: center;
   align-items: center;
   height: 100vh;
   width: 100vw;
-  flex-direction: row;
+  flex-direction: column;
+  background-color: white;
 `;
 
 const Button = styled.button`
@@ -27,11 +27,40 @@ const Button = styled.button`
   font-size: 18px;
   min-width: 2rem;
   margin: 0.2rem 2rem;
-  height: 70%;
+  height: 1rem;
   border-radius: 10px;
   &:hover {
     background-color: #ff2626;
   }
+`;
+
+const WorkspaceListContainer = styled.div`
+  display: flex;
+  height: 60vh;
+  width: 25vw;
+  flex-direction: column;
+  overflow-y: scroll;
+  position: absolute;
+  padding: 5px;
+  top: 2rem;
+  margin: 15rem 0;
+  background-color: white;
+  border-radius: 10px;
+`;
+
+const CreateWorkspaceContainer = styled.form`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 10vh;
+  width: 30rem;
+  margin: 1rem 0;
+  position: absolute;
+  top: 2rem;
+  margin: 5rem;
+  background-color: #dedede;
+
+  border-radius: 10px;
 `;
 
 export const Workspaces = () => {
@@ -84,7 +113,26 @@ export const Workspaces = () => {
         ) : (
           <></>
         )}
-        <>
+        <CreateWorkspaceContainer onSubmit={onSubmit}>
+          <input
+            type={"text"}
+            placeholder="name"
+            onInput={handleInput}
+            value={state.name}
+            name="name"
+          ></input>
+          <input
+            type={"checkbox"}
+            placeholder="isPrivate"
+            name="isPrivate"
+            onChange={() => {
+              setState({ ...state, isPrivate: !!state.isPrivate });
+            }}
+            value={state.isPrivate.toString()}
+          ></input>
+          <Button>Create</Button>
+        </CreateWorkspaceContainer>
+        <WorkspaceListContainer>
           {workspaces.map((w) => (
             <WorkspaceItem
               id={w.id}
@@ -93,26 +141,7 @@ export const Workspaces = () => {
               isPrivate={w.isPrivate}
             />
           ))}
-          <form onSubmit={onSubmit}>
-            <input
-              type={"text"}
-              placeholder="name"
-              onInput={handleInput}
-              value={state.name}
-              name="name"
-            ></input>
-            <input
-              type={"checkbox"}
-              placeholder="isPrivate"
-              name="isPrivate"
-              onChange={() => {
-                setState({ ...state, isPrivate: !!state.isPrivate });
-              }}
-              value={state.isPrivate.toString()}
-            ></input>
-            <Button>Create</Button>
-          </form>
-        </>
+        </WorkspaceListContainer>
       </Container>
     </>
   );
