@@ -21,3 +21,16 @@ type SendInvitationResponse = models.Invitation
 type GetInvitationsByWorkspaceResponse struct {
 	Invitations []models.Invitation `json:"invitations"`
 }
+
+type CancelInvitationPayload struct {
+	RicipientEmail *string `json:"ricipientEmail,omitempty"`
+}
+
+func (p *CancelInvitationPayload) Validate() error {
+	if p.RicipientEmail == nil || len(*p.RicipientEmail) == 0 {
+		return errors.New("Choose an email to cancel invitation")
+	}
+	return nil
+}
+
+type CancelInvitationResponse = models.Invitation

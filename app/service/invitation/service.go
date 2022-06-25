@@ -72,3 +72,29 @@ func (s *InvitationService) GetInvitationsByWorkspaceID(userID string, workspace
 		Invitations: invitations,
 	}, nil
 }
+
+func (s *InvitationService) CancelInvitation(payload dto.CancelInvitationPayload, senderID string, workspaceID string) (*dto.CancelInvitationResponse, error) {
+	accessType, err := s.workspaceRepository.GetAccessByUserId(senderID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.Compare(*accessType, models.USER) == 0 {
+		return nil, service.WorkspaceAccessDeniedErr
+	}
+
+	invitation, err := s.userRepository.CancelInvitation(senderID, workspaceID, *payload.RicipientEmail)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.CancelInvitationResponse{
+		ID:             invitation.ID,
+		RicipientEmail: invitation.RicipientEmail,
+		SenderID:       invitation.SenderID,
+		WorkspaceID:    invitation.WorkspaceID,
+		Status:         invitation.Status,
+	}, nil
+}

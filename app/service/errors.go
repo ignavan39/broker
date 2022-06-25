@@ -12,4 +12,5 @@ var (
 	EmptyUrlParamsErr           = errors.New("Empty URL parameters in http address")
 	DuplicateWorkspaceAccessErr = errors.New("Duplicate workspace access")
 	DuplicateInvitationErr      = errors.New("Duplicate invitation to this workspace for user")
+	InvitationNotFoundErr       = errors.New("There`s no invitations on this email")
 )
