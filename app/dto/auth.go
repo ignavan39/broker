@@ -24,6 +24,38 @@ type SignResponse struct {
 	Auth map[string]string `json:"auth"`
 }
 
+type SignPayloadResponseBuilder struct {
+	payload SignResponse
+}
+
+func NewSignPayloadResponseBuilder() *SignPayloadResponseBuilder {
+	return &SignPayloadResponseBuilder{
+		payload: SignResponse{
+			User: models.User{},
+			Auth: make(map[string]string),
+		},
+	}
+}
+
+func (sprb *SignPayloadResponseBuilder) WithUser(user models.User) *SignPayloadResponseBuilder {
+	sprb.payload.User = user
+	return sprb
+}
+
+func (sprb *SignPayloadResponseBuilder) WithAccessToken(accessToken string) *SignPayloadResponseBuilder {
+	sprb.payload.Auth["accessToken"] = accessToken
+	return sprb
+}
+
+func (sprb *SignPayloadResponseBuilder) WithRefreshToken(refreshToken string) *SignPayloadResponseBuilder {
+	sprb.payload.Auth["refreshToken"] = refreshToken
+	return sprb
+}
+
+func (sprb *SignPayloadResponseBuilder) Exec() SignResponse {
+	return sprb.payload
+}
+
 type SendVerifyCodePayload struct {
 	Email string `json:"email"`
 }
@@ -49,7 +81,7 @@ func (p *SignUpPayload) Validate() error {
 		return errors.New("password too short")
 	}
 
-	if p.Email == nil || isCorrectEmail(*p.Email) {
+	if p.Email == nil || !isCorrectEmail(*p.Email) {
 		return errors.New("email must be not empty string")
 	}
 
@@ -73,7 +105,7 @@ func (p *SignInPayload) Validate() error {
 		return errors.New("password too short")
 	}
 
-	if p.Email == nil || isCorrectEmail(*p.Email) {
+	if p.Email == nil || !isCorrectEmail(*p.Email) {
 		return errors.New("email must be not empty string")
 	}
 
