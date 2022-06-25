@@ -110,12 +110,17 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 		Set("status", models.ACCEPTED).
 		Where(sq.Eq{"ricipient_email": email}).
 		Suffix("returning workspace_id").
-		RunWith(r.pool.Write()).
+		RunWith(tx).
 		PlaceholderFormat(sq.Dollar).
 		Query()
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+
+			if err = tx.Commit(); err != nil {
+				return err
+			}
+
 			return nil
 		}
 
@@ -138,13 +143,18 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 		_, err := sq.Insert("workspace_accesses").
 			Columns("workspace_id", "user_id").
 			Values(workspace_id, userID).
-			RunWith(r.pool.Write()).
+			RunWith(tx).
 			PlaceholderFormat(sq.Dollar).
 			Exec()
 		if err != nil {
 			duplicate := strings.Contains(err.Error(), "duplicate")
 
 			if duplicate {
+
+				if err = tx.Commit(); err != nil {
+					return err
+				}
+
 				return service.DuplicateWorkspaceAccessErr
 			}
 

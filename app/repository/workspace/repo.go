@@ -34,12 +34,18 @@ func (r *Repository) Create(userID string, name string, isPrivate bool) (*models
 		Columns("name", "is_private").
 		Values(name, isPrivate).
 		Suffix("returning id, name, created_at, is_private").
-		RunWith(r.pool.Write()).
+		RunWith(tx).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 	if err := row.Scan(&workspace.ID, &workspace.Name, &workspace.CreatedAt, &workspace.IsPrivate); err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
+
 		if duplicate {
+
+			if err = tx.Commit(); err != nil {
+				return nil, err
+			}
+
 			return nil, service.DuplicateWorkspaceErr
 		}
 
@@ -53,12 +59,17 @@ func (r *Repository) Create(userID string, name string, isPrivate bool) (*models
 	_, err = sq.Insert("workspace_accesses").
 		Columns("workspace_id", "user_id", `"type"`).
 		Values(workspace.ID, userID, models.ADMIN).
-		RunWith(r.pool.Write()).
+		RunWith(tx).
 		PlaceholderFormat(sq.Dollar).
 		Exec()
 	if err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 		if duplicate {
+
+			if err = tx.Commit(); err != nil {
+				return nil, err
+			}
+
 			return nil, service.DuplicateWorkspaceEmailErr
 		}
 
