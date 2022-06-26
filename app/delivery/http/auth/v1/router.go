@@ -17,7 +17,7 @@ func (rt Router) InitRoutes(r chi.Router) {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/signUp", rt.controller.SignUp)
 			r.Post("/signIn", rt.controller.SignIn)
-			r.Post("/verifyCode", rt.controller.VerifyCode)
+			r.Post("/sendVerifyCode", rt.controller.SendVerifyCode)
 		})
 	})
 }

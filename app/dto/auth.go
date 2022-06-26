@@ -56,16 +56,15 @@ func (sprb *SignPayloadResponseBuilder) Exec() SignResponse {
 	return sprb.payload
 }
 
-type SendVerifyCodePayload struct {
-	Email string `json:"email"`
-}
-
-type VerifyCodePayload struct {
-	Code string `json:"code"`
-}
-
 type SendCodePayload struct {
 	Email string `json:"email"`
+}
+
+func (scp *SendCodePayload) Validate() error {
+	if !isCorrectEmail(scp.Email) {
+		return errors.New("email must be not empty string")
+	}
+	return nil
 }
 
 type SignInPayload = SignPayloadBase
@@ -111,22 +110,6 @@ func (p *SignInPayload) Validate() error {
 
 	if p.Nickname == nil || len(*p.Nickname) == 0 {
 		return errors.New("nickname must be not empty string")
-	}
-
-	return nil
-}
-
-func (p *SendVerifyCodePayload) Validate() error {
-	if isCorrectEmail(p.Email) {
-		return errors.New("email is not correct")
-	}
-
-	return nil
-}
-
-func (p *VerifyCodePayload) Validate() error {
-	if len(p.Code) != 5 {
-		return errors.New("code is not correct")
 	}
 
 	return nil

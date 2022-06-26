@@ -6,6 +6,7 @@ import (
 	"broker/app/service"
 	"broker/pkg/httpext"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -20,12 +21,11 @@ func NewController(peerService service.PeerService) *Controller {
 }
 
 func (c *Controller) CreateConnection(w http.ResponseWriter, r *http.Request) {
-	var payload dto.CreateWorkspaceConnectionPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
+	var payload dto.CreateWorkspaceConnectionPayload
 
-	if err != nil {
-		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
 	}
 
 	userId := middleware.GetUserIdFromContext(ctx)

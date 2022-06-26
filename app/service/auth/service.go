@@ -21,14 +21,14 @@ type AuthService struct {
 	expireDuration time.Duration
 	userRepo       repository.UserRepository
 	mailer         mailer.Mailer
-	cache          cache.Cache[string]
+	cache          cache.Cache[int]
 }
 
 func NewAuthService(
 	signingKey []byte,
 	expireDuration time.Duration,
 	userRepo repository.UserRepository,
-	cache cache.Cache[string],
+	cache cache.Cache[int],
 	mailer mailer.Mailer,
 ) *AuthService {
 	return &AuthService{
@@ -41,12 +41,12 @@ func NewAuthService(
 }
 
 func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*dto.SignResponse, error) {
-	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
-	if err != nil {
+	if err := a.verifyCode(ctx, *payload.Email, payload.Code); err != nil {
 		return nil, err
 	}
 
-	if err := a.SendVerifyCode(ctx, *payload.Email); err != nil {
+	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
+	if err != nil {
 		return nil, err
 	}
 
@@ -110,31 +110,26 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 }
 
 func (a *AuthService) SendVerifyCode(ctx context.Context, email string) error {
-	code := fmt.Sprintf("%d", utils.GenerateRandomNumber(1000, 9999))
+	code := utils.GenerateRandomNumber(10000, 99999)
 
 	if err := a.cache.Set(ctx, fmt.Sprintf("%s_%s", getUserPrefix(), email), code); err != nil {
 		return err
 	}
 
-	_, _, err := a.mailer.SendMail(ctx, fmt.Sprintf("Your verify code :%s", code), "Verify code", email)
+	_, _, err := a.mailer.SendMail(ctx, fmt.Sprintf("Your verify code :%d", code), "Verify code", email)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-func (a *AuthService) VerifyCode(ctx context.Context, userId string, payload dto.VerifyCodePayload) error {
-	email, err := a.userRepo.GetEmailById(userId)
-	if err != nil {
-		return err
-	}
-
-	code, err := a.cache.Get(ctx, fmt.Sprintf("%s_%s", getUserPrefix(), email))
+func (a *AuthService) verifyCode(ctx context.Context, email string, code int) error {
+	codeFromCache, err := a.cache.Get(ctx, fmt.Sprintf("%s_%s", getUserPrefix(), email))
 	if err != nil {
 		return service.VerifyCodeExpireErr
 	}
 
-	if code != &payload.Code {
+	if code != *codeFromCache {
 		return service.EmailCodeNotMatchErr
 	}
 

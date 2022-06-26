@@ -7,6 +7,7 @@ import (
 	"broker/pkg/httpext"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -27,17 +28,15 @@ func NewController(
 }
 
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var payload dto.CreateWorkspacePayload
 
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	ctx := r.Context()
-
-	if err != nil {
-		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	if err = payload.Validate(); err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -106,17 +105,15 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var payload dto.UpdateWorkspacePayload
 
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	ctx := r.Context()
-
-	if err != nil {
-		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	if err = payload.Validate(); err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}

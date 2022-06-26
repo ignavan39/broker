@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"broker/pkg/cache/redis"
-	"broker/pkg/mailer/mailgun"
+	mailer "broker/pkg/mailer/mock"
 	"broker/pkg/pg"
 	"context"
 	"os"
@@ -76,11 +76,11 @@ func NewApp(config config.Config) *App {
 		DB:       config.Redis.DB,
 	})
 
-	authCache := cache.NewRedisCache[string](redis, time.Duration(time.Minute*5), fmt.Sprintf("%s_%s", getAppPrefix(), "auth"), 10000)
+	authCache := cache.NewRedisCache[int](redis, time.Duration(time.Minute*5), fmt.Sprintf("%s_%s", getAppPrefix(), "auth"), 10000)
 
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
-	mailGun := mailer.NewMailgunApi(config.MailgunConfig.PrivateKey, config.MailgunConfig.PublicKey, config.MailgunConfig.Domain, config.MailgunConfig.Sender)
+	mailGun := mailer.NewMockMailer()
 	userRepo := userRepo.NewRepository(pgConn)
 	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo, authCache, mailGun)
 	authController := auth.NewController(authService)
