@@ -1,6 +1,7 @@
 version: '3.9'
 volumes:
   postgres_data:
+  redis_data:
 
 services:
   postgres:
@@ -67,6 +68,9 @@ services:
     image: redis
     ports: 
       - 6379:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD:-pass}
+    volumes: 
+      - redis_data:/data
     networks:
       broker:
         ipv4_address: 171.4.4.14
@@ -112,6 +116,8 @@ services:
     container_name: broker
     depends_on:
       - postgres
+      - redis
+      - rabbitmq
     build:
       args:
         - project=core
@@ -127,13 +133,7 @@ services:
       broker:
         ipv4_address: 171.4.4.12
         aliases:
-          - app.broker.loc
-  
-  broker-mail:
-    container_name: broker-mail
-    depends_on: 
-      - postgres
-    
+          - app.broker.loc    
 
 networks:
   broker:

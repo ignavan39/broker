@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"broker/app/delivery/http/middleware"
 	"broker/app/dto"
 	"broker/app/service"
 	"broker/pkg/httpext"
@@ -38,7 +39,7 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := c.authService.SignUp(payload)
+	res, err := c.authService.SignUp(ctx, payload)
 	if err != nil {
 		if errors.Is(err, service.DuplicateUserErr) {
 			httpext.AbortJSON(w, "user already exists", http.StatusBadRequest)
@@ -90,22 +91,32 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) VerifyCode(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var payload dto.VerifyCodePayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 
-	if err != nil {
-		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	err = payload.Validate()
-	if err != nil {
-		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	err = c.authService.VerifyCode(payload)
-	if err != nil {
+	userId := middleware.GetUserIdFromContext(ctx)
+
+	if err := c.authService.VerifyCode(ctx, userId, payload); err != nil {
+		if errors.Is(err, service.EmailCodeNotMatchErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, service.VerifyCodeExpireErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
-		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	httpext.EmptyResponse(w, http.StatusOK)
 }

@@ -6,7 +6,11 @@ import (
 	"broker/app/models"
 	"broker/app/repository"
 	"broker/app/service"
+	"broker/pkg/cache"
+	"broker/pkg/mailer"
 	"broker/pkg/utils"
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go/v4"
@@ -16,23 +20,33 @@ type AuthService struct {
 	signingKey     []byte
 	expireDuration time.Duration
 	userRepo       repository.UserRepository
+	mailer         mailer.Mailer
+	cache          cache.Cache[string]
 }
 
 func NewAuthService(
 	signingKey []byte,
 	expireDuration time.Duration,
 	userRepo repository.UserRepository,
+	cache cache.Cache[string],
+	mailer mailer.Mailer,
 ) *AuthService {
 	return &AuthService{
 		signingKey:     signingKey,
 		expireDuration: expireDuration,
 		userRepo:       userRepo,
+		cache:          cache,
+		mailer:         mailer,
 	}
 }
 
-func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error) {
+func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*dto.SignResponse, error) {
 	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := a.SendVerifyCode(ctx, *payload.Email); err != nil {
 		return nil, err
 	}
 
@@ -92,13 +106,38 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 	payloadBuilder.WithRefreshToken(refreshToken)
 
 	res := payloadBuilder.Exec()
-	return &res,err
+	return &res, err
 }
 
-func (a *AuthService) SendVerifyCode(payload dto.SendCodePayload) error {
+func (a *AuthService) SendVerifyCode(ctx context.Context, email string) error {
+	code := fmt.Sprintf("%d", utils.GenerateRandomNumber(1000, 9999))
+
+	if err := a.cache.Set(ctx, fmt.Sprintf("%s_%s", getUserPrefix(), email), code); err != nil {
+		return err
+	}
+
+	_, _, err := a.mailer.SendMail(ctx, fmt.Sprintf("Your verify code :%s", code), "Verify code", email)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
-func (a *AuthService) VerifyCode(payload dto.VerifyCodePayload) error {
+func (a *AuthService) VerifyCode(ctx context.Context, userId string, payload dto.VerifyCodePayload) error {
+	email, err := a.userRepo.GetEmailById(userId)
+	if err != nil {
+		return err
+	}
+
+	code, err := a.cache.Get(ctx, fmt.Sprintf("%s_%s", getUserPrefix(), email))
+	if err != nil {
+		return service.VerifyCodeExpireErr
+	}
+
+	if code != &payload.Code {
+		return service.EmailCodeNotMatchErr
+	}
+
 	return nil
 }
 
@@ -124,5 +163,14 @@ func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 		return nil, false
 	}
 
+	_, err = a.userRepo.GetEmailById(customClaims.ID)
+	if err != nil {
+		return customClaims, false
+	}
+
 	return customClaims, true
+}
+
+func getUserPrefix() string {
+	return "user"
 }

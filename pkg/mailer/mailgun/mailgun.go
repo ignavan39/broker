@@ -26,10 +26,11 @@ func NewMailgunApi(
 		privateKey: privateKey,
 		publicKey:  publicKey,
 		domain:     domain,
+		sender:     sender,
 	}
 }
 
-// return message,message id,error 
+// return message,message id,error
 func (m *MailgunApi) SendMail(ctx context.Context, msg string, subject string, recipient string) (string, string, error) {
 	message := m.mg.NewMessage(m.sender, subject, msg, recipient)
 	return m.mg.Send(ctx, message)

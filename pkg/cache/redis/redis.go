@@ -27,7 +27,7 @@ func NewRedisCache[T any](
 			Redis:      redisClient,
 			LocalCache: redisCache.NewTinyLFU(size, ttl),
 		}),
-		prefix: prefix,
+		prefix:         prefix,
 		expirationTime: defaultExpirationTime,
 	}
 }
@@ -42,23 +42,23 @@ func (w *RedisCache[T]) Set(ctx context.Context, key string, value T) error {
 		Ctx:   ctx,
 		Key:   key,
 		Value: value,
-		TTL: w.expirationTime,
+		TTL:   w.expirationTime,
 	})
 }
 
-func (w *RedisCache[T]) Get(ctx context.Context, key string) (*T,error) {
+func (w *RedisCache[T]) Get(ctx context.Context, key string) (*T, error) {
 	var value T
-	err := w.cache.Get(ctx,key,&value)
+	err := w.cache.Get(ctx, key, &value)
 
 	return &value, err
 }
 
 func (w *RedisCache[T]) Delete(ctx context.Context, key string) error {
-	return w.cache.Delete(ctx,key)
+	return w.cache.Delete(ctx, key)
 }
 
 func (w *RedisCache[T]) Exist(ctx context.Context, key string) bool {
-	return w.cache.Exists(ctx,key)
+	return w.cache.Exists(ctx, key)
 }
 
 func (w *RedisCache[T]) ExpirationTime() time.Duration {
