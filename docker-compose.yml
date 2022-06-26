@@ -43,7 +43,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASS:-user}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d
+      - ./migrations/core:/docker-entrypoint-initdb.d
     ports:
       - '5432:5432'
     healthcheck:
@@ -113,22 +113,20 @@ services:
           - broker.api.frontend.loc
 
   broker-core:
-    container_name: broker
+    container_name: broker-core
     depends_on:
       - postgres
       - redis
       - rabbitmq
     build:
-      args:
-        - project=core
       context: .
-      dockerfile: ./docker/app.dockerfile
+      dockerfile: ./docker/core.dockerfile
     ports:
      - ${PORT:-8080}:80
     command: 
       ["./wait-for-it.sh", "5432"]
     env_file:
-      - .env
+      - ./services/core/.env
     networks:
       broker:
         ipv4_address: 171.4.4.12

@@ -17,6 +17,7 @@ jobs:
 
       - name: 'Build application'
         run: |
+          cd ./services
           go mod download && go mod verify
 
           CGO_ENABLED=0 GOOS=linux go build -a \
