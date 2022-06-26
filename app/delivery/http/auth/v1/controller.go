@@ -28,30 +28,22 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 	var payload dto.SignUpPayload
 	ctx := r.Context()
 
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	err = payload.Validate()
-	if err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	res, err := c.authService.SignUp(ctx, payload)
 	if err != nil {
-		if errors.Is(err, service.EmailCodeNotMatchErr) {
+		if errors.Is(err, service.EmailCodeNotMatchErr) ||
+			errors.Is(err, service.VerifyCodeExpireErr) ||
+			errors.Is(err, service.DuplicateUserErr) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if errors.Is(err, service.VerifyCodeExpireErr) {
-			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if errors.Is(err, service.DuplicateUserErr) {
-			httpext.AbortJSON(w, "user already exists", http.StatusBadRequest)
 			return
 		} else {
 			blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())

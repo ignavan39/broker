@@ -76,7 +76,11 @@ func NewApp(config config.Config) *App {
 		DB:       config.Redis.DB,
 	})
 
-	authCache := cache.NewRedisCache[int](redis, time.Duration(time.Minute*5), fmt.Sprintf("%s_%s", getAppPrefix(), "auth"), 10000)
+	authCache := cache.NewRedisCache[int](redis,
+		time.Duration(time.Minute*5),
+		fmt.Sprintf("%s_%s", getAppPrefix(), "auth"),
+		10000).
+		WithExpirationTime(time.Duration(time.Minute * 5))
 
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
