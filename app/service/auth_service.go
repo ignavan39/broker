@@ -2,6 +2,7 @@ package service
 
 import (
 	"broker/app/dto"
+	"context"
 
 	"github.com/dgrijalva/jwt-go/v4"
 )
@@ -12,7 +13,8 @@ type Claims struct {
 }
 
 type AuthService interface {
-	SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error)
+	SignUp(ctx context.Context, payload dto.SignUpPayload) (*dto.SignResponse, error)
 	SignIn(payload dto.SignInPayload) (*dto.SignResponse, error)
+	SendVerifyCode(ctx context.Context, email string) error
 	Validate(jwtToken string) (*Claims, bool)
 }

@@ -10,4 +10,6 @@ var (
 	DuplicateWorkspaceEmailErr = errors.New("Duplicate user in workspace")
 	WorkspaceAccessDeniedErr   = errors.New("Workspace access denied")
 	EmptyUrlParamsErr          = errors.New("Empty URL parameters in http address")
+	EmailCodeNotMatchErr       = errors.New("Code not match")
+	VerifyCodeExpireErr        = errors.New("Verify code expire")
 )

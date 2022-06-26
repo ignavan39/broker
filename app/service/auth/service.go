@@ -6,7 +6,11 @@ import (
 	"broker/app/models"
 	"broker/app/repository"
 	"broker/app/service"
+	"broker/pkg/cache"
+	"broker/pkg/mailer"
 	"broker/pkg/utils"
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go/v4"
@@ -16,35 +20,55 @@ type AuthService struct {
 	signingKey     []byte
 	expireDuration time.Duration
 	userRepo       repository.UserRepository
+	mailer         mailer.Mailer
+	cache          cache.Cache[int]
 }
 
 func NewAuthService(
 	signingKey []byte,
 	expireDuration time.Duration,
 	userRepo repository.UserRepository,
+	cache cache.Cache[int],
+	mailer mailer.Mailer,
 ) *AuthService {
 	return &AuthService{
 		signingKey:     signingKey,
 		expireDuration: expireDuration,
 		userRepo:       userRepo,
+		cache:          cache,
+		mailer:         mailer,
 	}
 }
 
-func (a *AuthService) SignUp(payload dto.SignUpPayload) (*dto.SignResponse, error) {
+func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*dto.SignResponse, error) {
+	if err := a.verifyCode(ctx, *payload.Email, payload.Code); err != nil {
+		return nil, err
+	}
+
 	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
 	if err != nil {
 		return nil, err
 	}
 
-	auth, err := a.refresh(user.ID)
+	payloadBuilder := dto.NewSignPayloadResponseBuilder().WithUser(*user)
+
+	accessToken, err := a.createToken(user.ID, a.expireDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	return &dto.SignResponse{
-		Auth: auth,
-		User: *user,
-	}, nil
+	payloadBuilder.WithAccessToken(accessToken)
+
+	refreshToken, err := a.createToken(user.ID, time.Duration(24*30))
+	if err != nil {
+		return nil, err
+	}
+
+	payloadBuilder.WithRefreshToken(refreshToken)
+
+	res := payloadBuilder.Exec()
+
+	return &res, nil
 }
 
 func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, error) {
@@ -65,30 +89,51 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 		return nil, service.PasswordNotMatch
 	}
 
-	auth, err := a.refresh(user.ID)
+	payloadBuilder := dto.NewSignPayloadResponseBuilder().WithUser(*user)
+
+	accessToken, err := a.createToken(user.ID, a.expireDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	return &dto.SignResponse{
-		Auth: auth,
-		User: *user,
-	}, nil
+	payloadBuilder.WithAccessToken(accessToken)
+
+	refreshToken, err := a.createToken(user.ID, time.Duration(24*30))
+	if err != nil {
+		return nil, err
+	}
+
+	payloadBuilder.WithRefreshToken(refreshToken)
+
+	res := payloadBuilder.Exec()
+	return &res, err
 }
 
-func (a *AuthService) refresh(id string) (map[string]string, error) {
-	auth := map[string]string{}
-	accessToken, err := a.createToken(id, a.expireDuration)
-	if err != nil {
-		return auth, err
+func (a *AuthService) SendVerifyCode(ctx context.Context, email string) error {
+	code := utils.GenerateRandomNumber(10000, 99999)
+
+	if err := a.cache.Set(ctx, fmt.Sprintf("%s_%s", getUserPrefix(), email), code); err != nil {
+		return err
 	}
-	auth["accessToken"] = accessToken
-	refreshToken, err := a.createToken(id, time.Duration(24*30))
+
+	_, _, err := a.mailer.SendMail(ctx, fmt.Sprintf("Your verify code :%d", code), "Verify code", email)
 	if err != nil {
-		return auth, err
+		return err
 	}
-	auth["refreshToken"] = refreshToken
-	return auth, nil
+
+	return nil
+}
+func (a *AuthService) verifyCode(ctx context.Context, email string, code int) error {
+	codeFromCache, err := a.cache.Get(ctx, fmt.Sprintf("%s_%s", getUserPrefix(), email))
+	if err != nil {
+		return service.VerifyCodeExpireErr
+	}
+
+	if code != *codeFromCache {
+		return service.EmailCodeNotMatchErr
+	}
+
+	return nil
 }
 
 func (a *AuthService) createToken(id string, expireAt time.Duration) (string, error) {
@@ -113,5 +158,14 @@ func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 		return nil, false
 	}
 
+	_, err = a.userRepo.GetEmailById(customClaims.ID)
+	if err != nil {
+		return customClaims, false
+	}
+
 	return customClaims, true
+}
+
+func getUserPrefix() string {
+	return "user"
 }

@@ -6,6 +6,7 @@ import (
 	"broker/pkg/httpext"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	blogger "github.com/sirupsen/logrus"
@@ -25,24 +26,24 @@ func NewController(
 
 func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 	var payload dto.SignUpPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
 
-	if err != nil {
-		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
+		return
 	}
 
-	err = payload.Validate()
-	if err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	res, err := c.authService.SignUp(payload)
-
+	res, err := c.authService.SignUp(ctx, payload)
 	if err != nil {
-		if errors.Is(err, service.DuplicateUserErr) {
-			httpext.AbortJSON(w, "user already exists", http.StatusBadRequest)
+		if errors.Is(err, service.EmailCodeNotMatchErr) ||
+			errors.Is(err, service.VerifyCodeExpireErr) ||
+			errors.Is(err, service.DuplicateUserErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		} else {
 			blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
@@ -55,23 +56,20 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
-	var payload dto.SignInPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
 	ctx := r.Context()
+	var payload dto.SignInPayload
 
-	if err != nil {
-		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	err = payload.Validate()
-	if err != nil {
+	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	res, err := c.authService.SignIn(payload)
-
 	if err != nil {
 		var code int
 		if errors.Is(err, service.UserNotFoundErr) {
@@ -87,4 +85,28 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpext.JSON(w, res, http.StatusOK)
+}
+
+func (c *Controller) SendVerifyCode(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var payload dto.SendCodePayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	if err := payload.Validate(); err != nil {
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := c.authService.SendVerifyCode(ctx, payload.Email); err != nil {
+		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.EmptyResponse(w, http.StatusOK)
 }

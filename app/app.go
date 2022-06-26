@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"broker/pkg/cache/redis"
+	mailer "broker/pkg/mailer/mock"
 	"broker/pkg/pg"
 	"context"
 	"os"
@@ -27,6 +29,7 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi"
+	"github.com/go-redis/redis/v8"
 
 	chim "github.com/go-chi/chi/middleware"
 	"github.com/streadway/amqp"
@@ -67,10 +70,23 @@ func NewApp(config config.Config) *App {
 
 	blogger.Info("AMQP connection established")
 
+	redis := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", config.Redis.Host, config.Redis.Port),
+		Password: config.Redis.Password,
+		DB:       config.Redis.DB,
+	})
+
+	authCache := cache.NewRedisCache[int](redis,
+		time.Duration(time.Minute*5),
+		fmt.Sprintf("%s_%s", getAppPrefix(), "auth"),
+		10000).
+		WithExpirationTime(time.Duration(time.Minute * 5))
+
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
+	mailGun := mailer.NewMockMailer()
 	userRepo := userRepo.NewRepository(pgConn)
-	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo)
+	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo, authCache, mailGun)
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
 
@@ -119,4 +135,8 @@ func (a *App) Run() {
 		blogger.Info("[os.SIGNAL] done")
 	}()
 	a.web.WaitForDone()
+}
+
+func getAppPrefix() string {
+	return "broker_app"
 }
