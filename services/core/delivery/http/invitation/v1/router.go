@@ -1,7 +1,7 @@
 package invitation
 
 import (
-	"broker/app/delivery/http/middleware"
+	"broker/core/delivery/http/middleware"
 
 	"github.com/go-chi/chi"
 )
@@ -24,7 +24,7 @@ func (rt Router) InitRoutes(r chi.Router) {
 			r.Use(rt.authGuard.Next())
 			r.Post("/create/{workspaceID}", rt.controller.SendInvitation)
 			r.Get("/{workspaceID}", rt.controller.GetInvitations)
-			r.Delete("/{workspaceID}", rt.controller.CancelInvitation)
+			r.Delete("/cancel/{invitationID}", rt.controller.CancelInvitation)
 		})
 	})
 }

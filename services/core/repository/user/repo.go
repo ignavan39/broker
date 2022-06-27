@@ -155,7 +155,7 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 					return err
 				}
 
-				return service.DuplicateWorkspaceAccessErr
+				return service.DuplicateUserErr
 			}
 
 			if err = tx.Rollback(); err != nil {
@@ -230,12 +230,12 @@ func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID stri
 	return invitations, nil
 }
 
-func (r *Repository) CancelInvitation(senderID string, workspaceID string, ricipientEmail string) (*models.Invitation, error) {
+func (r *Repository) CancelInvitation(senderID string, invitationID string) (*models.Invitation, error) {
 	var invitation models.Invitation
 
 	row := sq.Update("invitations").
 		Set(`"status"`, models.CANCELED).
-		Where(sq.Eq{"workspace_id": workspaceID, "sender_id": senderID, "ricipient_email": ricipientEmail}).
+		Where(sq.Eq{"sender_id": senderID, "id": invitationID}).
 		Suffix("returning id, sender_id, ricipient_email, workspace_id, status").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).

@@ -68,6 +68,10 @@ func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*d
 
 	res := payloadBuilder.Exec()
 
+	if err := a.userRepo.CheckInvites(user.ID, user.Email); err != nil {
+		return nil, err
+	}
+
 	return &res, nil
 }
 
@@ -154,11 +158,12 @@ func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 	token, err := jwt.ParseWithClaims(jwtToken, customClaims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.signingKey), nil
 	})
+
 	if err != nil || !token.Valid {
 		return nil, false
 	}
 
-	_, err = a.userRepo.GetEmailById(customClaims.ID)
+	_, err = a.userRepo.GetEmailById(customClaims.Id)
 	if err != nil {
 		return customClaims, false
 	}
