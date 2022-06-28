@@ -34,12 +34,12 @@ func NewAuthService(
 	mailer mailer.Mailer,
 ) *AuthService {
 	return &AuthService{
-		signingKey:     signingKey,
-		expireDuration: expireDuration,
-		userRepository: userRepository,
+		signingKey:           signingKey,
+		expireDuration:       expireDuration,
+		userRepository:       userRepository,
 		invitationRepository: invitationRepository,
-		cache:          cache,
-		mailer:         mailer,
+		cache:                cache,
+		mailer:               mailer,
 	}
 }
 

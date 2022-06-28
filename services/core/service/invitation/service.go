@@ -44,6 +44,7 @@ func (s *InvitationService) SendInvitation(payload dto.SendInvitationPayload,
 
 	return &dto.SendInvitationResponse{
 		ID:             invitation.ID,
+		CreatedAt:      invitation.CreatedAt,
 		Sender:         invitation.Sender,
 		RicipientEmail: invitation.RicipientEmail,
 		WorkspaceID:    invitation.WorkspaceID,
@@ -82,6 +83,7 @@ func (s *InvitationService) CancelInvitation(senderID string, invitationID strin
 
 	return &dto.CancelInvitationResponse{
 		ID:             invitation.ID,
+		CreatedAt:      invitation.CreatedAt,
 		RicipientEmail: invitation.RicipientEmail,
 		Sender:         invitation.Sender,
 		WorkspaceID:    invitation.WorkspaceID,

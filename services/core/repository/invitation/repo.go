@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	
+
 	blogger "github.com/sirupsen/logrus"
 )
 
@@ -107,8 +107,8 @@ func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipie
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 
-	if err := row.Scan(&invitation.Sender.ID, &invitation.Sender.Email, &invitation.Sender.Nickname, 
-						&invitation.Sender.FirstName, &invitation.Sender.LastName, &invitation.Sender.AvatarURL); err != nil {
+	if err := row.Scan(&invitation.Sender.ID, &invitation.Sender.Email, &invitation.Sender.Nickname,
+		&invitation.Sender.FirstName, &invitation.Sender.LastName, &invitation.Sender.AvatarURL); err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, service.UserNotFoundErr
 		}
@@ -118,12 +118,12 @@ func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipie
 	row = sq.Insert("invitations").
 		Columns("sender_id", "ricipient_email", "workspace_id").
 		Values(senderID, ricipientEmail, workspaceID).
-		Suffix("returning id, ricipient_email, workspace_id, status").
+		Suffix("returning id, created_at, ricipient_email, workspace_id, status").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 
-	if err := row.Scan(&invitation.ID, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
+	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 
 		if duplicate {
@@ -139,13 +139,14 @@ func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipie
 func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID string) ([]models.Invitation, error) {
 	invitations := make([]models.Invitation, 0)
 
-	rows, err := sq.Select("i.id", "i.sender_id", "u.email", "u.nickname",
+	rows, err := sq.Select("i.id", "i.created_at", "i.sender_id", "u.email", "u.nickname",
 		"u.first_name", "u.last_name", "u.avatar_url", "i.ricipient_email",
 		"i.workspace_id", "i.status").
 		From("invitations i").
 		InnerJoin("workspace_accesses wa ON wa.workspace_id = i.workspace_id").
 		InnerJoin("users u ON wa.user_id = u.id").
 		Where(sq.Eq{"u.id": userID, "i.workspace_id": workspaceID}).
+		OrderBy("created_at ASC").
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		Query()
@@ -161,7 +162,7 @@ func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID stri
 	for rows.Next() {
 		var invitation models.Invitation
 
-		if err := rows.Scan(&invitation.ID, &invitation.Sender.ID,
+		if err := rows.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.Sender.ID,
 			&invitation.Sender.Email, &invitation.Sender.Nickname,
 			&invitation.Sender.FirstName, &invitation.Sender.LastName, &invitation.Sender.AvatarURL,
 			&invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
@@ -180,12 +181,12 @@ func (r *Repository) CancelInvitation(invitationID string) (*models.Invitation, 
 	row := sq.Update("invitations").
 		Set(`"status"`, models.CANCELED).
 		Where(sq.Eq{"id": invitationID}).
-		Suffix("returning id, sender_id, ricipient_email, workspace_id, status").
+		Suffix("returning id, created_at, sender_id, ricipient_email, workspace_id, status").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 
-	if err := row.Scan(&invitation.ID, &invitation.Sender.ID, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
+	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.Sender.ID, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, service.InvitationNotFoundErr
 		}
@@ -200,8 +201,8 @@ func (r *Repository) CancelInvitation(invitationID string) (*models.Invitation, 
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 
-	if err := row.Scan(&invitation.Sender.Email, &invitation.Sender.Nickname, 
-						&invitation.Sender.FirstName, &invitation.Sender.LastName, &invitation.Sender.AvatarURL); err != nil {
+	if err := row.Scan(&invitation.Sender.Email, &invitation.Sender.Nickname,
+		&invitation.Sender.FirstName, &invitation.Sender.LastName, &invitation.Sender.AvatarURL); err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, service.UserNotFoundErr
 		}
