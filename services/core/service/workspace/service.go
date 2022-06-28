@@ -48,12 +48,6 @@ func (s *WorkspaceService) Delete(userID string, workspaceID string) error {
 		return service.WorkspaceAccessDeniedErr
 	}
 
-	_, err = s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
-
-	if err != nil {
-		return err
-	}
-
 	err = s.workspaceRepository.Delete(workspaceID)
 
 	if err != nil {

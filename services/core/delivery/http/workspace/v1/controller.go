@@ -43,8 +43,6 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 
 	userId := middleware.GetUserIdFromContext(ctx)
 
-	blogger.Println(userId)
-
 	res, err := c.workspaceService.Create(payload, userId)
 
 	if err != nil {

@@ -9,17 +9,17 @@ import (
 )
 
 type InvitationService struct {
-	userRepository      repository.UserRepository
-	workspaceRepository repository.WorkspaceRepository
+	workspaceRepository  repository.WorkspaceRepository
+	invitationRepository repository.InvitationRepository
 }
 
 func NewInvitationService(
-	userRepository repository.UserRepository,
 	workspaceRepository repository.WorkspaceRepository,
+	invitationRepository repository.InvitationRepository,
 ) *InvitationService {
 	return &InvitationService{
-		userRepository:      userRepository,
-		workspaceRepository: workspaceRepository,
+		workspaceRepository:  workspaceRepository,
+		invitationRepository: invitationRepository,
 	}
 }
 
@@ -36,7 +36,7 @@ func (s *InvitationService) SendInvitation(payload dto.SendInvitationPayload,
 		return nil, service.WorkspaceAccessDeniedErr
 	}
 
-	invitation, err := s.userRepository.SendInvitation(senderID, workspaceID, payload.RicipientEmail)
+	invitation, err := s.invitationRepository.SendInvitation(senderID, workspaceID, payload.RicipientEmail)
 
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *InvitationService) SendInvitation(payload dto.SendInvitationPayload,
 
 	return &dto.SendInvitationResponse{
 		ID:             invitation.ID,
-		SenderID:       invitation.SenderID,
+		Sender:         invitation.Sender,
 		RicipientEmail: invitation.RicipientEmail,
 		WorkspaceID:    invitation.WorkspaceID,
 		Status:         invitation.Status,
@@ -62,7 +62,7 @@ func (s *InvitationService) GetInvitationsByWorkspaceID(userID string, workspace
 		return nil, service.WorkspaceAccessDeniedErr
 	}
 
-	invitations, err := s.userRepository.GetInvitationsByWorkspaceID(userID, workspaceID)
+	invitations, err := s.invitationRepository.GetInvitationsByWorkspaceID(userID, workspaceID)
 
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (s *InvitationService) GetInvitationsByWorkspaceID(userID string, workspace
 }
 
 func (s *InvitationService) CancelInvitation(senderID string, invitationID string) (*dto.CancelInvitationResponse, error) {
-	invitation, err := s.userRepository.CancelInvitation(senderID, invitationID)
+	invitation, err := s.invitationRepository.CancelInvitation(invitationID)
 
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (s *InvitationService) CancelInvitation(senderID string, invitationID strin
 	return &dto.CancelInvitationResponse{
 		ID:             invitation.ID,
 		RicipientEmail: invitation.RicipientEmail,
-		SenderID:       invitation.SenderID,
+		Sender:         invitation.Sender,
 		WorkspaceID:    invitation.WorkspaceID,
 		Status:         invitation.Status,
 	}, nil

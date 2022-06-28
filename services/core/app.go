@@ -8,6 +8,7 @@ import (
 	"broker/core/delivery/http/middleware"
 	"broker/core/delivery/http/peer/v1"
 	"broker/core/delivery/http/workspace/v1"
+	invitationRepo "broker/core/repository/invitation"
 	peerRepo "broker/core/repository/peer"
 	userRepo "broker/core/repository/user"
 	workspaceRepo "broker/core/repository/workspace"
@@ -88,7 +89,8 @@ func NewApp(config config.Config) *App {
 
 	mailGun := mailer.NewMockMailer()
 	userRepo := userRepo.NewRepository(pgConn)
-	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo, authCache, mailGun)
+	invitationRepo := invitationRepo.NewRepository(pgConn)
+	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo, invitationRepo, authCache, mailGun)
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
 
@@ -112,7 +114,7 @@ func NewApp(config config.Config) *App {
 	peerController := peer.NewController(peerService)
 	peerRouter := peer.NewRouter(peerController, authGuard)
 
-	invitationService := invitationSrv.NewInvitationService(userRepo, workspaceRepo)
+	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo)
 	invitationController := invitation.NewController(invitationService)
 	invitationRouter := invitation.NewRouter(invitationController, *authGuard)
 

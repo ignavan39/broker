@@ -10,7 +10,7 @@ var (
 
 type Invitation struct {
 	ID             string           `json:"id"`
-	SenderID       string           `json:"senderID"`
+	Sender         User             `json:"sender"`
 	RicipientEmail string           `json:"ricipientEmail"`
 	WorkspaceID    string           `json:"workspaceID"`
 	Status         InvitationStatus `json:"status"`

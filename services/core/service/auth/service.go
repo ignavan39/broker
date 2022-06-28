@@ -17,24 +17,27 @@ import (
 )
 
 type AuthService struct {
-	signingKey     []byte
-	expireDuration time.Duration
-	userRepo       repository.UserRepository
-	mailer         mailer.Mailer
-	cache          cache.Cache[int]
+	signingKey           []byte
+	expireDuration       time.Duration
+	userRepository       repository.UserRepository
+	invitationRepository repository.InvitationRepository
+	mailer               mailer.Mailer
+	cache                cache.Cache[int]
 }
 
 func NewAuthService(
 	signingKey []byte,
 	expireDuration time.Duration,
-	userRepo repository.UserRepository,
+	userRepository repository.UserRepository,
+	invitationRepository repository.InvitationRepository,
 	cache cache.Cache[int],
 	mailer mailer.Mailer,
 ) *AuthService {
 	return &AuthService{
 		signingKey:     signingKey,
 		expireDuration: expireDuration,
-		userRepo:       userRepo,
+		userRepository: userRepository,
+		invitationRepository: invitationRepository,
 		cache:          cache,
 		mailer:         mailer,
 	}
@@ -45,7 +48,7 @@ func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*d
 		return nil, err
 	}
 
-	user, err := a.userRepo.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
+	user, err := a.userRepository.Create(*payload.Nickname, *payload.Email, utils.CryptString(payload.Password, config.GetConfig().JWT.HashSalt), payload.LastName, payload.FirstName)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +71,7 @@ func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*d
 
 	res := payloadBuilder.Exec()
 
-	if err := a.userRepo.CheckInvites(user.ID, user.Email); err != nil {
+	if err := a.invitationRepository.CheckInvites(user.ID, user.Email); err != nil {
 		return nil, err
 	}
 
@@ -80,9 +83,9 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 	var err error
 
 	if payload.Email != nil {
-		user, err = a.userRepo.GetOneByEmail(*payload.Email)
+		user, err = a.userRepository.GetOneByEmail(*payload.Email)
 	} else {
-		user, err = a.userRepo.GetOneByNickname(*payload.Nickname)
+		user, err = a.userRepository.GetOneByNickname(*payload.Nickname)
 	}
 
 	if err != nil {
@@ -163,7 +166,7 @@ func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 		return nil, false
 	}
 
-	_, err = a.userRepo.GetEmailById(customClaims.Id)
+	_, err = a.userRepository.GetEmailById(customClaims.Id)
 	if err != nil {
 		return customClaims, false
 	}

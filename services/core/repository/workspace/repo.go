@@ -41,7 +41,6 @@ func (r *Repository) Create(userID string, name string, isPrivate bool) (*models
 		duplicate := strings.Contains(err.Error(), "duplicate")
 
 		if duplicate {
-
 			if err = tx.Commit(); err != nil {
 				return nil, err
 			}
@@ -65,7 +64,6 @@ func (r *Repository) Create(userID string, name string, isPrivate bool) (*models
 	if err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 		if duplicate {
-
 			if err = tx.Commit(); err != nil {
 				return nil, err
 			}
@@ -139,7 +137,7 @@ func (r *Repository) GetManyByUserId(id string) ([]models.Workspace, error) {
 		InnerJoin("workspace_accesses wa ON wa.workspace_id = w.id").
 		InnerJoin("users u ON wa.user_id = u.id").
 		Where(sq.Eq{"u.id": id}).
-		OrderBy("w.is_private, w.created_at", "DESC").
+		OrderBy("w.is_private DESC", "w.created_at DESC").
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		Query()

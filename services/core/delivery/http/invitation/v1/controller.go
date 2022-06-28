@@ -43,6 +43,7 @@ func (c *Controller) SendInvitation(w http.ResponseWriter, r *http.Request) {
 
 	if len(workspaceID) == 0 {
 		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
+		return
 	}
 
 	userID := middleware.GetUserIdFromContext(ctx)
@@ -73,6 +74,7 @@ func (c *Controller) GetInvitations(w http.ResponseWriter, r *http.Request) {
 
 	if len(workspaceID) == 0 {
 		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
+		return
 	}
 
 	userID := middleware.GetUserIdFromContext(ctx)
@@ -99,6 +101,7 @@ func (c *Controller) CancelInvitation(w http.ResponseWriter, r *http.Request) {
 
 	if len(invitationID) == 0 {
 		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
+		return
 	}
 
 	userID := middleware.GetUserIdFromContext(ctx)

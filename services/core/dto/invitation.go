@@ -11,7 +11,7 @@ type SendInvitationPayload struct {
 
 func (p *SendInvitationPayload) Validate() error {
 	if len(p.RicipientEmail) == 0 {
-		return errors.New("Choose an email to send invitation")
+		return errors.New("email must be not empty string")
 	}
 	return nil
 }
