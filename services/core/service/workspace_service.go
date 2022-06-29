@@ -10,6 +10,6 @@ type WorkspaceService interface {
 	Update(payload dto.UpdateWorkspacePayload, workspaceID string, userID string) (*dto.UpdateWorkspaceResponse, error)
 	GetManyByUserID(userID string) (*dto.GetManyByUserResponse, error)
 	GetWorkspaceInfo(userID string, workspaceID string) (*dto.GetWorkspaceInfoResponse, error)
-	ChangeUserRole(payload dto.ChangeUserRoleWorkspacePayload, userID string, workspaceID string) error
+	ChangeUserRole(payload dto.ChangeUserRoleWorkspacePayload, adminID string, userID string, workspaceID string) error
 	BanUser(userID string, bannedUserID string, workspaceID string) error
 }

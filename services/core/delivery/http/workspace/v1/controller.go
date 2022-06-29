@@ -178,10 +178,14 @@ func (c *Controller) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	blogger.Println("decoded")
+
 	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	blogger.Println("validated")
 
 	workspaceID := chi.URLParam(r, "workspaceID")
 
@@ -190,9 +194,17 @@ func (c *Controller) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := middleware.GetUserIdFromContext(ctx)
+	userID := chi.URLParam(r, "userID")
 
-	err := c.workspaceService.ChangeUserRole(payload, userID, workspaceID)
+	if len(userID) == 0 {
+		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
+		return
+	}
+
+	adminID := middleware.GetUserIdFromContext(ctx)
+
+	blogger.Println("params got")
+	err := c.workspaceService.ChangeUserRole(payload, adminID, userID, workspaceID)
 
 	if err != nil {
 		if errors.Is(err, service.WorkspaceAccessDeniedErr) {

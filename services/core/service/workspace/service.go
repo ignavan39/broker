@@ -143,8 +143,9 @@ func (s *WorkspaceService) GetWorkspaceInfo(userID string, workspaceID string) (
 	}, nil
 }
 
-func (s *WorkspaceService) ChangeUserRole(payload dto.ChangeUserRoleWorkspacePayload, userID string, workspaceID string) error {
-	accessType, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+func (s *WorkspaceService) ChangeUserRole(payload dto.ChangeUserRoleWorkspacePayload,
+										 adminID string, userID string, workspaceID string) error {
+	accessType, err := s.workspaceRepository.GetAccessByUserId(adminID, workspaceID)
 
 	if err != nil {
 		return err

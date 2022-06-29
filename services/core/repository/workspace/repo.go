@@ -230,7 +230,7 @@ func (r *Repository) GetWorkspaceUsersCount(workspaceID string) (int, error) {
 
 func (r *Repository) ChangeUserRole(role string, userID string, workspaceID string) error {
 	_, err := sq.Update("workspace_accesses").
-		Set("role", role).
+		Set(`"type"`, role).
 		Where(sq.Eq{"user_id": userID, "workspace_id": workspaceID}).
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
