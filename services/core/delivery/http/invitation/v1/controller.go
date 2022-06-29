@@ -128,18 +128,27 @@ func (c *Controller) CancelInvitation(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	code := chi.URLParam(r, "code")
+	var payload dto.AcceptInvitationPayload
 
-	if len(code) == 0 {
-		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := payload.Validate(); err != nil {
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	userID := middleware.GetUserIdFromContext(ctx)
 
-	err := c.invitationService.AcceptInvitation(userID, code)
+	err := c.invitationService.AcceptInvitation(payload, userID)
 
 	if err != nil {
+		if errors.Is(err, service.InviteAccessDeniedErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		if errors.Is(err, service.InvitationNotFoundErr) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return

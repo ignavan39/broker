@@ -6,11 +6,11 @@ import (
 )
 
 type SendInvitationPayload struct {
-	RicipientEmail string `json:"ricipientEmail"`
+	RecipientEmail string `json:"recipientEmail"`
 }
 
 func (p *SendInvitationPayload) Validate() error {
-	if !isCorrectEmail(p.RicipientEmail) {
+	if !isCorrectEmail(p.RecipientEmail) {
 		return errors.New("email must be not empty string")
 	}
 	return nil
@@ -23,3 +23,14 @@ type GetInvitationsByWorkspaceResponse struct {
 }
 
 type CancelInvitationResponse = models.Invitation
+
+type AcceptInvitationPayload struct {
+	Code string `json:"code"`
+}
+
+func (p *AcceptInvitationPayload) Validate() error {
+	if len(p.Code) == 0 {
+		return errors.New("code must be not empty string")
+	}
+	return nil
+}

@@ -88,10 +88,28 @@ func (r *Repository) AcceptInvitation(userID string, code string) error {
 	return nil
 }
 
-func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipientEmail string) (*models.Invitation, error) {
+func (r *Repository) SendInvitation(senderID string, workspaceID string, recipientEmail string) (*models.Invitation, error) {
 	var invitation models.Invitation
 
-	row := sq.Select("id", "email", "nickname", "first_name", "last_name", "avatar_url").
+	var count int
+
+	row := sq.Select("COUNT(*) AS count").
+		From("workspace_accesses wa").
+		InnerJoin("users u ON u.id = wa.user_id").
+		Where(sq.Eq{"wa.workspace_id": workspaceID, "u.email": recipientEmail}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+
+	if err := row.Scan(&count); err != nil {
+		return nil, err
+	}
+
+	if count > 0 {
+		return nil, service.UserAlreadyExistsErr
+	}
+
+	row = sq.Select("id", "email", "nickname", "first_name", "last_name", "avatar_url").
 		From("users").
 		Where(sq.Eq{"id": senderID}).
 		RunWith(r.pool.Read()).
@@ -109,14 +127,14 @@ func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipie
 	code := utils.CryptString(fmt.Sprintf("%s%s", senderID, workspaceID), config.GetConfig().Invitation.InvitationHashSalt)
 
 	row = sq.Insert("invitations").
-		Columns("sender_id", "ricipient_email", "workspace_id, code, system_status").
-		Values(senderID, ricipientEmail, workspaceID, code, models.SEND).
-		Suffix("returning id, created_at, ricipient_email, workspace_id, status, system_status, code").
+		Columns("sender_id", "recipient_email", "workspace_id, code, system_status").
+		Values(senderID, recipientEmail, workspaceID, code, models.SEND).
+		Suffix("returning id, created_at, recipient_email, workspace_id, status, system_status, code").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 
-	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.RicipientEmail,
+	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.RecipientEmail,
 		&invitation.WorkspaceID, &invitation.Status, &invitation.SystemStatus,
 		&invitation.Code); err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
@@ -135,8 +153,8 @@ func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID stri
 	invitations := make([]models.Invitation, 0)
 
 	rows, err := sq.Select("i.id", "i.created_at", "i.sender_id", "u.email", "u.nickname",
-		"u.first_name", "u.last_name", "u.avatar_url", "i.ricipient_email",
-		"i.workspace_id", "i.status").
+		"u.first_name", "u.last_name", "u.avatar_url", "i.recipient_email",
+		"i.workspace_id", "i.status", "i.system_status", "i.code").
 		From("invitations i").
 		InnerJoin("workspace_accesses wa ON wa.workspace_id = i.workspace_id").
 		InnerJoin("users u ON wa.user_id = u.id").
@@ -160,7 +178,8 @@ func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID stri
 		if err := rows.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.Sender.ID,
 			&invitation.Sender.Email, &invitation.Sender.Nickname,
 			&invitation.Sender.FirstName, &invitation.Sender.LastName, &invitation.Sender.AvatarURL,
-			&invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
+			&invitation.RecipientEmail, &invitation.WorkspaceID, &invitation.Status,
+			&invitation.SystemStatus, &invitation.Code); err != nil {
 			return nil, err
 		}
 
@@ -170,46 +189,14 @@ func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID stri
 	return invitations, nil
 }
 
-func (r *Repository) CancelInvitation(invitationID string) (*models.Invitation, error) {
+func (r *Repository) CancelInvitation(userID string, invitationID string) (*models.Invitation, error) {
 	var invitation models.Invitation
 
-	_, err := sq.Select("u.id").
+	row := sq.Select("u.email", "u.nickname", "u.first_name", "u.last_name", "u.avatar_url").
 		From("users u").
 		InnerJoin("workspace_accesses wa ON wa.user_id = u.id").
-		Where(sq.NotEq{"wa.`type`": models.USER}).
-		RunWith(r.pool.Read()).
-		PlaceholderFormat(sq.Dollar).
-		Query()
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, service.WorkspaceAccessDeniedErr
-		}
-
-		return nil, err
-	}
-
-	row := sq.Update("invitations").
-		Set(`"status"`, models.CANCELED).
-		Where(sq.Eq{"id": invitationID}).
-		Suffix("returning id, created_at, sender_id, ricipient_email, workspace_id, status, system_status, code").
-		RunWith(r.pool.Write()).
-		PlaceholderFormat(sq.Dollar).
-		QueryRow()
-
-	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.Sender.ID,
-		&invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status,
-		&invitation.SystemStatus, &invitation.Code); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, service.InvitationNotFoundErr
-		}
-
-		return nil, err
-	}
-
-	row = sq.Select("email", "nickname", "first_name", "last_name", "avatar_url").
-		From("users").
-		Where(sq.Eq{"id": invitation.Sender.ID}).
+		InnerJoin(`invitations i ON i.sender_id = u.id OR wa."type" = ?`, models.ADMIN).
+		Where(sq.Eq{"u.id": userID}).
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
@@ -217,8 +204,26 @@ func (r *Repository) CancelInvitation(invitationID string) (*models.Invitation, 
 	if err := row.Scan(&invitation.Sender.Email, &invitation.Sender.Nickname,
 		&invitation.Sender.FirstName, &invitation.Sender.LastName, &invitation.Sender.AvatarURL); err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
-			return nil, service.UserNotFoundErr
+			return nil, service.WorkspaceAccessDeniedErr
 		}
+		return nil, err
+	}
+
+	row = sq.Update("invitations").
+		Set(`"status"`, models.CANCELED).
+		Where(sq.Eq{"id": invitationID}).
+		Suffix("returning id, created_at, sender_id, recipient_email, workspace_id, status, system_status, code").
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+
+	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.Sender.ID,
+		&invitation.RecipientEmail, &invitation.WorkspaceID, &invitation.Status,
+		&invitation.SystemStatus, &invitation.Code); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, service.InvitationNotFoundErr
+		}
+
 		return nil, err
 	}
 

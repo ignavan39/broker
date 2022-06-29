@@ -20,7 +20,7 @@ type Invitation struct {
 	ID             string           `json:"id"`
 	CreatedAt      time.Time        `json:"createdAt"`
 	Sender         User             `json:"sender"`
-	RicipientEmail string           `json:"ricipientEmail"`
+	RecipientEmail string           `json:"recipientEmail"`
 	WorkspaceID    string           `json:"workspaceID"`
 	Status         InvitationStatus `json:"status"`
 	SystemStatus   SystemStatus     `json:"systemStatus"`

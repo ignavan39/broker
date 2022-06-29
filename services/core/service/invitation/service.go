@@ -36,7 +36,7 @@ func (s *InvitationService) SendInvitation(payload dto.SendInvitationPayload,
 		return nil, service.WorkspaceAccessDeniedErr
 	}
 
-	invitation, err := s.invitationRepository.SendInvitation(senderID, workspaceID, payload.RicipientEmail)
+	invitation, err := s.invitationRepository.SendInvitation(senderID, workspaceID, payload.RecipientEmail)
 
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (s *InvitationService) SendInvitation(payload dto.SendInvitationPayload,
 		ID:             invitation.ID,
 		CreatedAt:      invitation.CreatedAt,
 		Sender:         invitation.Sender,
-		RicipientEmail: invitation.RicipientEmail,
+		RecipientEmail: invitation.RecipientEmail,
 		WorkspaceID:    invitation.WorkspaceID,
 		Status:         invitation.Status,
 		SystemStatus:   invitation.SystemStatus,
@@ -77,8 +77,7 @@ func (s *InvitationService) GetInvitationsByWorkspaceID(userID string, workspace
 }
 
 func (s *InvitationService) CancelInvitation(senderID string, invitationID string) (*dto.CancelInvitationResponse, error) {
-
-	invitation, err := s.invitationRepository.CancelInvitation(invitationID)
+	invitation, err := s.invitationRepository.CancelInvitation(senderID, invitationID)
 
 	if err != nil {
 		return nil, err
@@ -87,7 +86,7 @@ func (s *InvitationService) CancelInvitation(senderID string, invitationID strin
 	return &dto.CancelInvitationResponse{
 		ID:             invitation.ID,
 		CreatedAt:      invitation.CreatedAt,
-		RicipientEmail: invitation.RicipientEmail,
+		RecipientEmail: invitation.RecipientEmail,
 		Sender:         invitation.Sender,
 		WorkspaceID:    invitation.WorkspaceID,
 		Status:         invitation.Status,
@@ -96,8 +95,8 @@ func (s *InvitationService) CancelInvitation(senderID string, invitationID strin
 	}, nil
 }
 
-func (s *InvitationService) AcceptInvitation(userID string, code string) error {
-	err := s.invitationRepository.AcceptInvitation(userID, code)
+func (s *InvitationService) AcceptInvitation(payload dto.AcceptInvitationPayload, userID string) error {
+	err := s.invitationRepository.AcceptInvitation(userID, payload.Code)
 
 	if err != nil {
 		return err

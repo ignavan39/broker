@@ -81,7 +81,7 @@ CREATE TABLE invitations (
     id uuid NOT NULL DEFAULT uuid_generate_v4() CONSTRAINT invites_pk PRIMARY KEY,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     sender_id uuid NOT NULL CONSTRAINT invitations_sender_id_fk REFERENCES users(id),
-    ricipient_email TEXT NOT NULL,
+    recipient_email TEXT NOT NULL,
     workspace_id uuid NOT NULL CONSTRAINT invitations_workspace_id_fk REFERENCES workspaces(id) ON DELETE CASCADE,
     "status" invitation_status NOT NULL DEFAULT 'PENDING',
     system_status invitation_system_status NOT NULL DEFAULT 'CREATED',
