@@ -12,4 +12,8 @@ var (
 	EmptyUrlParamsErr          = errors.New("Empty URL parameters in http address")
 	EmailCodeNotMatchErr       = errors.New("Code not match")
 	VerifyCodeExpireErr        = errors.New("Verify code expire")
+	DuplicateInvitationErr     = errors.New("Duplicate invitation to this workspace for user")
+	InvitationNotFoundErr      = errors.New("There`s no invitations on this email")
+	InviteAccessDeniedErr      = errors.New("Invitation access denied")
+	UserAlreadyExistsErr       = errors.New("User already exists")
 )

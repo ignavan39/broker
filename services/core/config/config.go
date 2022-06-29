@@ -39,12 +39,17 @@ type MailgunConfig struct {
 	Sender     string `env:"MAILGUN_SENDER"`
 }
 
+type InvitationConfig struct {
+	InvitationHashSalt string `env:"INVITATION_HASH_SALT" envDefault:"puper_secret"`
+}
+
 type Config struct {
 	JWT           JWTConfig
 	Database      pg.Config
 	MailgunConfig MailgunConfig
 	AMQP          AMQPConfig
 	Redis         RedisConfig
+	Invitation    InvitationConfig
 }
 
 var config = Config{}
@@ -114,12 +119,17 @@ func Init() error {
 		DB:       int(redisDB),
 	}
 
+	invitation := InvitationConfig{
+		InvitationHashSalt: os.Getenv("INVITATION_HASH_SALT"),
+	}
+
 	config = Config{
 		Database:      pgConf,
 		JWT:           jwt,
 		MailgunConfig: mailgunConfig,
 		AMQP:          amqpConf,
 		Redis:         redis,
+		Invitation:    invitation,
 	}
 	return nil
 }

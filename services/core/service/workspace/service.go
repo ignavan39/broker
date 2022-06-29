@@ -26,14 +26,8 @@ func NewWorkspaceService(
 	}
 }
 
-func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId string) (*dto.CreateWorkspaceResponse, error) {
-	userEmail, err := s.userRepository.GetEmailById(userId)
-
-	if err != nil {
-		return nil, err
-	}
-
-	workspace, err := s.workspaceRepository.Create(userEmail, payload.Name, payload.IsPrivate)
+func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userID string) (*dto.CreateWorkspaceResponse, error) {
+	workspace, err := s.workspaceRepository.Create(userID, payload.Name, payload.IsPrivate)
 
 	if err != nil {
 		return nil, err
@@ -44,10 +38,14 @@ func (s *WorkspaceService) Create(payload dto.CreateWorkspacePayload, userId str
 }
 
 func (s *WorkspaceService) Delete(userID string, workspaceID string) error {
-	_, err := s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
+	accessType, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
 
 	if err != nil {
 		return err
+	}
+
+	if strings.Compare(*accessType, models.ADMIN) != 0 {
+		return service.WorkspaceAccessDeniedErr
 	}
 
 	err = s.workspaceRepository.Delete(workspaceID)
@@ -66,7 +64,7 @@ func (s *WorkspaceService) Update(payload dto.UpdateWorkspacePayload, workspaceI
 		return nil, err
 	}
 
-	if strings.Compare(*accessType, models.ADMIN) == 0 {
+	if strings.Compare(*accessType, models.ADMIN) != 0 {
 		return nil, service.WorkspaceAccessDeniedErr
 	}
 
@@ -103,6 +101,12 @@ func (s *WorkspaceService) GetManyByUserID(userId string) (*dto.GetManyByUserRes
 }
 
 func (s *WorkspaceService) GetWorkspaceInfo(userID string, workspaceID string) (*dto.GetWorkspaceInfoResponse, error) {
+	_, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
 	workspace, err := s.workspaceRepository.GetWorkspaceByUserId(userID, workspaceID)
 
 	if err != nil {
@@ -115,7 +119,7 @@ func (s *WorkspaceService) GetWorkspaceInfo(userID string, workspaceID string) (
 		return nil, err
 	}
 
-	usersCount, err := s.workspaceRepository.GetWorkspaceUsersCount(userID, workspaceID)
+	usersCount, err := s.workspaceRepository.GetWorkspaceUsersCount(workspaceID)
 
 	if err != nil {
 		return nil, err
