@@ -5,17 +5,26 @@ import { User } from "../types/User";
 export type SignDto = User;
 
 export const sign = async (
-  payload: {
-    email: string;
-    password: string;
-    nickname?: string;
-    lastName?: string;
-    firstName?: string;
-  },
-  operation: "signIn" | "signUp"
+  payload:
+    | {
+        operation: "sign_up";
+        email: string;
+        password: string;
+        nickname: string;
+        lastName: string;
+        firstName: string;
+        code: number;
+      }
+    | {
+        operation: "sign_in";
+        email: string;
+        password: string;
+      }
 ) => {
   const url =
-    operation === "signIn" ? Host + "/auth/signIn" : Host + "/auth/signUp";
+    payload.operation === "sign_in"
+      ? Host + "/auth/signIn"
+      : Host + "/auth/signUp";
   const user = await axios.post<SignDto>(url, {
     ...payload,
   });

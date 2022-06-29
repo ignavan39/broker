@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
-import { sign } from "../api";
-import { userState } from "../state/User.state";
-import { User } from "../types/User";
-import { ErrorPopup } from "./ErrorPopup";
+import { sign } from "../../api";
+import { userState } from "../../state/User.state";
+import { User } from "../../types/User";
+import { ErrorPopup } from "../ErrorPopup";
 const Container = styled.div`
   display: flex;
   justify-content: center;
@@ -81,20 +81,13 @@ const FormButton = styled.div`
   margin: 0.2rem 0;
 `;
 
-type AuthProp = {
-  register: boolean;
-};
-
-export const Auth = (prop: AuthProp) => {
+export const Login = () => {
   const [err, setErr] = useState<string | null>(null);
   const [errorPopupState, setOpenPopupState] = useState<boolean>(false);
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
     password: user.user.password ?? "",
     email: user.user.email ?? "",
-    firstName: !prop.register ? user.user.firstName ?? "" : "",
-    lastName: !prop.register ? user.user.lastName ?? "" : "",
-    nickname: !prop.register ? user.user.nickname ?? "" : "",
   });
   const navigate = useNavigate();
 
@@ -110,10 +103,11 @@ export const Auth = (prop: AuthProp) => {
     (async () => {
       try {
         if (user.user.password.length && user.user.email.length) {
-          const apiResponse = await sign(
-            { password: user.user.password, email: user.user.email },
-            "signIn"
-          );
+          const apiResponse = await sign({
+            password: user.user.password,
+            email: user.user.email,
+            operation: "sign_in",
+          });
           const updatedUser: User = {
             ...apiResponse,
             user: {
@@ -136,10 +130,11 @@ export const Auth = (prop: AuthProp) => {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const apiResponse = await sign(
-        state,
-        prop.register ? "signUp" : "signIn"
-      );
+      const apiResponse = await sign({
+        password: state.password,
+        email: state.email,
+        operation: "sign_in",
+      });
       const updatedUser: User = {
         ...apiResponse,
         user: {
@@ -164,7 +159,7 @@ export const Auth = (prop: AuthProp) => {
         <></>
       )}
       <Form onSubmit={onSubmit}>
-        {prop.register ? <Header>Register</Header> : <Header>Login</Header>}
+        <Header>Login</Header>
         <FormInput>
           <Input
             type={"email"}
@@ -181,51 +176,17 @@ export const Auth = (prop: AuthProp) => {
             value={state.password}
             name="password"
           />
-          {prop.register ? (
-            <>
-              <Input
-                type={"text"}
-                minLength={1}
-                placeholder="Nickname"
-                onInput={handleInput}
-                value={state.nickname}
-                name="nickname"
-              />
-              <Input
-                type={"text"}
-                minLength={1}
-                placeholder="First Name"
-                onInput={handleInput}
-                value={state.firstName}
-                name="firstName"
-              />
-              <Input
-                type={"text"}
-                minLength={1}
-                placeholder="Last Name"
-                onInput={handleInput}
-                value={state.lastName}
-                name="lastName"
-              />
-            </>
-          ) : (
-            <></>
-          )}
         </FormInput>
         <FormButton>
           <Button>Submit</Button>
-          {!prop.register ? (
-            <Button
-              style={{ backgroundColor: "#ff9900" }}
-              onClick={() => {
-                navigate("/register");
-              }}
-            >
-              Registration
-            </Button>
-          ) : (
-            <></>
-          )}
+          <Button
+            style={{ backgroundColor: "#ff9900" }}
+            onClick={() => {
+              navigate("/register");
+            }}
+          >
+            Registration
+          </Button>
         </FormButton>
       </Form>
     </Container>

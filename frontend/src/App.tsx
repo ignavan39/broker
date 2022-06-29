@@ -2,7 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { RecoilRoot, useRecoilValue } from "recoil";
-import { Auth } from "./components/Auth";
+import { Login } from "./components/auth/Login";
+import { Registration } from "./components/auth/Registration";
 import { Home } from "./components/Home";
 import { Workspaces } from "./components/Workspaces";
 import { userIsLoggined } from "./state/User.state";
@@ -12,12 +13,12 @@ const BaseRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/auth" element={<Auth register={false} />} />
-        <Route path="/register" element={<Auth register={true} />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Registration />} />
         <Route path="*" element={isLoggined ? <Home /> : <Navigate to="/" />} />
         <Route
           path="/"
-          element={isLoggined ? <Workspaces /> : <Navigate to="/auth" />}
+          element={isLoggined ? <Workspaces /> : <Navigate to="/login" />}
         />
       </Routes>
     </BrowserRouter>
