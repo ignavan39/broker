@@ -27,14 +27,26 @@ func NewRepository(pool pg.Pool) *Repository {
 func (r *Repository) AcceptInvitation(userID string, code string) error {
 	tx, err := r.pool.Write().Begin()
 	var workspaceID string
+	var recipientEmail string
 
 	if err != nil {
 		return err
 	}
 
-	row := sq.Update("invitations").
+	row := sq.Select("email").
+		From("users").
+		Where(sq.Eq{"user_id": userID}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+
+	if err := row.Scan(&recipientEmail); err != nil {
+		return err
+	}
+
+	row = sq.Update("invitations").
 		Set("status", models.ACCEPTED).
-		Where(sq.Eq{"code": code}).
+		Where(sq.Eq{"code": code, "recipientEmail": recipientEmail}).
 		Suffix("returning workspace_id").
 		RunWith(tx).
 		PlaceholderFormat(sq.Dollar).

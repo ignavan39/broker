@@ -158,5 +158,5 @@ func (c *Controller) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpext.JSON(w, nil, http.StatusOK)
+	httpext.EmptyResponse(w, http.StatusOK)
 }

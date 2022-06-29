@@ -227,3 +227,40 @@ func (r *Repository) GetWorkspaceUsersCount(workspaceID string) (int, error) {
 
 	return usersCount, nil
 }
+
+func (r *Repository) ChangeUserRole(role string, userID string, workspaceID string) error {
+	_, err := sq.Update("workspace_accesses").
+		Set("role", role).
+		Where(sq.Eq{"user_id": userID, "workspace_id": workspaceID}).
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return service.UserNotFoundErr
+		}
+
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) BanUser(bannedUserID string, workspaceID string) error {
+	_, err := sq.Delete("workspace_accesses").
+		Where(sq.Eq{"user_id": bannedUserID, "workspace_id": workspaceID}, sq.NotEq{`"type"`: models.ADMIN}).
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return service.UserNotFoundErr
+		}
+
+		return err
+	}
+
+	return nil
+}

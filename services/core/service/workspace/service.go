@@ -142,3 +142,41 @@ func (s *WorkspaceService) GetWorkspaceInfo(userID string, workspaceID string) (
 		UsersCount: usersCount,
 	}, nil
 }
+
+func (s *WorkspaceService) ChangeUserRole(payload dto.ChangeUserRoleWorkspacePayload, userID string, workspaceID string) error {
+	accessType, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+
+	if err != nil {
+		return err
+	}
+
+	if strings.Compare(*accessType, models.ADMIN) != 0 {
+		return service.WorkspaceAccessDeniedErr
+	}
+
+	if err := s.workspaceRepository.ChangeUserRole(payload.Role, userID, workspaceID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *WorkspaceService) BanUser(userID string, bannedUserID string, workspaceID string) error {
+	accessType, err := s.workspaceRepository.GetAccessByUserId(userID, workspaceID)
+
+	if err != nil {
+		return err
+	}
+
+	if strings.Compare(*accessType, models.ADMIN) != 0 {
+		return service.WorkspaceAccessDeniedErr
+	}
+
+	err = s.workspaceRepository.BanUser(bannedUserID, workspaceID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
