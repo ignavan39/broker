@@ -8,6 +8,7 @@ import (
 	"broker/pkg/utils"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
@@ -105,11 +106,11 @@ func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipie
 		return nil, err
 	}
 
-	code := utils.CryptString(senderID+workspaceID, config.GetConfig().Invitation.InvitationHashSalt)
+	code := utils.CryptString(fmt.Sprintf("%s%s", senderID, workspaceID), config.GetConfig().Invitation.InvitationHashSalt)
 
 	row = sq.Insert("invitations").
-		Columns("sender_id", "ricipient_email", "workspace_id, code").
-		Values(senderID, ricipientEmail, workspaceID, code).
+		Columns("sender_id", "ricipient_email", "workspace_id, code, system_status").
+		Values(senderID, ricipientEmail, workspaceID, code, models.SEND).
 		Suffix("returning id, created_at, ricipient_email, workspace_id, status, system_status, code").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
@@ -171,6 +172,22 @@ func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID stri
 
 func (r *Repository) CancelInvitation(invitationID string) (*models.Invitation, error) {
 	var invitation models.Invitation
+
+	_, err := sq.Select("u.id").
+		From("users u").
+		InnerJoin("workspace_accesses wa ON wa.user_id = u.id").
+		Where(sq.NotEq{"wa.`type`": models.USER}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		Query()
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, service.WorkspaceAccessDeniedErr
+		}
+
+		return nil, err
+	}
 
 	row := sq.Update("invitations").
 		Set(`"status"`, models.CANCELED).

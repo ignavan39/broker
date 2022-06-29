@@ -77,6 +77,7 @@ func (s *InvitationService) GetInvitationsByWorkspaceID(userID string, workspace
 }
 
 func (s *InvitationService) CancelInvitation(senderID string, invitationID string) (*dto.CancelInvitationResponse, error) {
+
 	invitation, err := s.invitationRepository.CancelInvitation(invitationID)
 
 	if err != nil {

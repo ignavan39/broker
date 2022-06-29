@@ -109,6 +109,10 @@ func (c *Controller) CancelInvitation(w http.ResponseWriter, r *http.Request) {
 	res, err := c.invitationService.CancelInvitation(userID, invitationID)
 
 	if err != nil {
+		if errors.Is(err, service.WorkspaceAccessDeniedErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
+			return
+		}
 		if errors.Is(err, service.InvitationNotFoundErr) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
