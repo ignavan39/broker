@@ -1,16 +1,16 @@
 package invitation
 
 import (
+	"broker/core/config"
 	"broker/core/models"
 	"broker/core/service"
 	"broker/pkg/pg"
+	"broker/pkg/utils"
 	"database/sql"
 	"errors"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Repository struct {
@@ -23,24 +23,23 @@ func NewRepository(pool pg.Pool) *Repository {
 	}
 }
 
-func (r *Repository) CheckInvites(userID string, email string) error {
-	blogger.Println("HERE")
-
+func (r *Repository) AcceptInvitation(userID string, code string) error {
 	tx, err := r.pool.Write().Begin()
+	var workspaceID string
 
 	if err != nil {
 		return err
 	}
 
-	rows, err := sq.Update("invitations").
+	row := sq.Update("invitations").
 		Set("status", models.ACCEPTED).
-		Where(sq.Eq{"ricipient_email": email}).
+		Where(sq.Eq{"code": code}).
 		Suffix("returning workspace_id").
 		RunWith(tx).
 		PlaceholderFormat(sq.Dollar).
-		Query()
+		QueryRow()
 
-	if err != nil {
+	if err := row.Scan(&workspaceID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			if err = tx.Commit(); err != nil {
 				return err
@@ -56,38 +55,29 @@ func (r *Repository) CheckInvites(userID string, email string) error {
 		return err
 	}
 
-	defer rows.Close()
+	_, err = sq.Insert("workspace_accesses").
+		Columns("workspace_id", "user_id").
+		Values(workspaceID, userID).
+		RunWith(tx).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
 
-	for rows.Next() {
-		var workspace_id string
+	if err != nil {
+		duplicate := strings.Contains(err.Error(), "duplicate")
 
-		if err := rows.Scan(&workspace_id); err != nil {
-			return err
-		}
-
-		_, err := sq.Insert("workspace_accesses").
-			Columns("workspace_id", "user_id").
-			Values(workspace_id, userID).
-			RunWith(tx).
-			PlaceholderFormat(sq.Dollar).
-			Exec()
-		if err != nil {
-			duplicate := strings.Contains(err.Error(), "duplicate")
-
-			if duplicate {
-				if err = tx.Commit(); err != nil {
-					return err
-				}
-
-				return service.DuplicateUserErr
-			}
-
-			if err = tx.Rollback(); err != nil {
+		if duplicate {
+			if err = tx.Commit(); err != nil {
 				return err
 			}
 
+			return service.DuplicateUserErr
+		}
+
+		if err = tx.Rollback(); err != nil {
 			return err
 		}
+
+		return err
 	}
 
 	if err = tx.Commit(); err != nil {
@@ -115,15 +105,19 @@ func (r *Repository) SendInvitation(senderID string, workspaceID string, ricipie
 		return nil, err
 	}
 
+	code := utils.CryptString(senderID+workspaceID, config.GetConfig().Invitation.InvitationHashSalt)
+
 	row = sq.Insert("invitations").
-		Columns("sender_id", "ricipient_email", "workspace_id").
-		Values(senderID, ricipientEmail, workspaceID).
-		Suffix("returning id, created_at, ricipient_email, workspace_id, status").
+		Columns("sender_id", "ricipient_email", "workspace_id, code").
+		Values(senderID, ricipientEmail, workspaceID, code).
+		Suffix("returning id, created_at, ricipient_email, workspace_id, status, system_status, code").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 
-	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
+	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.RicipientEmail,
+		&invitation.WorkspaceID, &invitation.Status, &invitation.SystemStatus,
+		&invitation.Code); err != nil {
 		duplicate := strings.Contains(err.Error(), "duplicate")
 
 		if duplicate {
@@ -146,7 +140,7 @@ func (r *Repository) GetInvitationsByWorkspaceID(userID string, workspaceID stri
 		InnerJoin("workspace_accesses wa ON wa.workspace_id = i.workspace_id").
 		InnerJoin("users u ON wa.user_id = u.id").
 		Where(sq.Eq{"u.id": userID, "i.workspace_id": workspaceID}).
-		OrderBy("created_at ASC").
+		OrderBy("created_at DESC", "sender_id DESC").
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		Query()
@@ -181,12 +175,14 @@ func (r *Repository) CancelInvitation(invitationID string) (*models.Invitation, 
 	row := sq.Update("invitations").
 		Set(`"status"`, models.CANCELED).
 		Where(sq.Eq{"id": invitationID}).
-		Suffix("returning id, created_at, sender_id, ricipient_email, workspace_id, status").
+		Suffix("returning id, created_at, sender_id, ricipient_email, workspace_id, status, system_status, code").
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
 
-	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.Sender.ID, &invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status); err != nil {
+	if err := row.Scan(&invitation.ID, &invitation.CreatedAt, &invitation.Sender.ID,
+		&invitation.RicipientEmail, &invitation.WorkspaceID, &invitation.Status,
+		&invitation.SystemStatus, &invitation.Code); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, service.InvitationNotFoundErr
 		}

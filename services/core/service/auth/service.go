@@ -71,10 +71,6 @@ func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*d
 
 	res := payloadBuilder.Exec()
 
-	if err := a.invitationRepository.CheckInvites(user.ID, user.Email); err != nil {
-		return nil, err
-	}
-
 	return &res, nil
 }
 

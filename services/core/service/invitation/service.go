@@ -49,6 +49,8 @@ func (s *InvitationService) SendInvitation(payload dto.SendInvitationPayload,
 		RicipientEmail: invitation.RicipientEmail,
 		WorkspaceID:    invitation.WorkspaceID,
 		Status:         invitation.Status,
+		SystemStatus:   invitation.SystemStatus,
+		Code:           invitation.Code,
 	}, nil
 }
 
@@ -88,5 +90,17 @@ func (s *InvitationService) CancelInvitation(senderID string, invitationID strin
 		Sender:         invitation.Sender,
 		WorkspaceID:    invitation.WorkspaceID,
 		Status:         invitation.Status,
+		SystemStatus:   invitation.SystemStatus,
+		Code:           invitation.Code,
 	}, nil
+}
+
+func (s *InvitationService) AcceptInvitation(userID string, code string) error {
+	err := s.invitationRepository.AcceptInvitation(userID, code)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

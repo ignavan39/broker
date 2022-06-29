@@ -120,3 +120,30 @@ func (c *Controller) CancelInvitation(w http.ResponseWriter, r *http.Request) {
 
 	httpext.JSON(w, res, http.StatusOK)
 }
+
+func (c *Controller) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	code := chi.URLParam(r, "code")
+
+	if len(code) == 0 {
+		httpext.AbortJSON(w, service.EmptyUrlParamsErr.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	err := c.invitationService.AcceptInvitation(userID, code)
+
+	if err != nil {
+		if errors.Is(err, service.InvitationNotFoundErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		blogger.Errorf("[InvitationController][AcceptInvitation] Error: %s", err)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.JSON(w, nil, http.StatusOK)
+}

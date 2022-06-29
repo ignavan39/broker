@@ -3,11 +3,17 @@ package models
 import "time"
 
 type InvitationStatus = string
+type SystemStatus = string
 
 var (
 	PENDING  InvitationStatus = "PENDING"
 	ACCEPTED InvitationStatus = "ACCEPTED"
 	CANCELED InvitationStatus = "CANCELED"
+
+	CREATED   SystemStatus = "CREATED"
+	SEND      SystemStatus = "SEND"
+	DELIVERED SystemStatus = "DELIVERED"
+	REJECT    SystemStatus = "REJECT"
 )
 
 type Invitation struct {
@@ -17,4 +23,6 @@ type Invitation struct {
 	RicipientEmail string           `json:"ricipientEmail"`
 	WorkspaceID    string           `json:"workspaceID"`
 	Status         InvitationStatus `json:"status"`
+	SystemStatus   SystemStatus     `json:"systemStatus"`
+	Code           string           `json:"code"`
 }
