@@ -52,19 +52,13 @@ func (sprb *SignPayloadResponseBuilder) WithUser(user models.User) *SignPayloadR
 	return sprb
 }
 
-func (sprb *SignPayloadResponseBuilder) WithAccessToken(accessToken string, duration time.Duration) *SignPayloadResponseBuilder {
-	sprb.payload.Auth.Access = TokenResponse{
-		Token:    accessToken,
-		ExpireAt: time.Now().Add(duration),
-	}
+func (sprb *SignPayloadResponseBuilder) WithAccessToken(token TokenResponse) *SignPayloadResponseBuilder {
+	sprb.payload.Auth.Access = token
 	return sprb
 }
 
-func (sprb *SignPayloadResponseBuilder) WithRefreshToken(refreshToken string, duration time.Duration) *SignPayloadResponseBuilder {
-	sprb.payload.Auth.Refresh = TokenResponse{
-		Token:    refreshToken,
-		ExpireAt: time.Now().Add(duration),
-	}
+func (sprb *SignPayloadResponseBuilder) WithRefreshToken(token TokenResponse) *SignPayloadResponseBuilder {
+	sprb.payload.Auth.Refresh = token
 	return sprb
 }
 

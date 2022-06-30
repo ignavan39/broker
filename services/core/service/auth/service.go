@@ -63,14 +63,14 @@ func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*d
 		return nil, err
 	}
 
-	payloadBuilder.WithAccessToken(accessToken, a.accessExpireDuration)
+	payloadBuilder.WithAccessToken(*accessToken)
 
 	refreshToken, err := a.createToken(user.ID, a.refreshExpireDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	payloadBuilder.WithRefreshToken(refreshToken, a.refreshExpireDuration)
+	payloadBuilder.WithRefreshToken(*refreshToken)
 
 	res := payloadBuilder.Exec()
 
@@ -102,14 +102,14 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 		return nil, err
 	}
 
-	payloadBuilder.WithAccessToken(accessToken, a.accessExpireDuration)
+	payloadBuilder.WithAccessToken(*accessToken)
 
 	refreshToken, err := a.createToken(user.ID, a.refreshExpireDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	payloadBuilder.WithRefreshToken(refreshToken, a.refreshExpireDuration)
+	payloadBuilder.WithRefreshToken(*refreshToken)
 
 	res := payloadBuilder.Exec()
 	return &res, err
@@ -142,16 +142,25 @@ func (a *AuthService) verifyCode(ctx context.Context, email string, code int) er
 	return nil
 }
 
-func (a *AuthService) createToken(id string, expireAt time.Duration) (string, error) {
+func (a *AuthService) createToken(id string, duration time.Duration) (*dto.TokenResponse, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &service.Claims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: jwt.At(time.Now().Add(expireAt)),
+			ExpiresAt: jwt.At(time.Now().Add(duration)),
 			IssuedAt:  jwt.At(time.Now()),
 		},
 		Id: id,
 	})
 
-	return token.SignedString(a.signingKey)
+	tokenString, err := token.SignedString(a.signingKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.TokenResponse {
+		Token: tokenString,
+		ExpireAt: time.Now().Add(duration),
+	}, nil
 }
 
 func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
