@@ -44,7 +44,7 @@ func (r *Repository) AcceptInvitation(userID string, code string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return service.UserNotFoundErr
 		}
-		
+
 		return err
 	}
 
