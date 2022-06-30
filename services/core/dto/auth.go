@@ -63,7 +63,7 @@ func (sprb *SignPayloadResponseBuilder) WithAccessToken(accessToken string, dura
 func (sprb *SignPayloadResponseBuilder) WithRefreshToken(refreshToken string, duration time.Duration) *SignPayloadResponseBuilder {
 	sprb.payload.Auth.Refresh = TokenResponse{
 		Token:    refreshToken,
-		ExpireAt: time.Now().Add(168 * time.Hour),
+		ExpireAt: time.Now().Add(duration),
 	}
 	return sprb
 }

@@ -65,7 +65,7 @@ func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*d
 
 	payloadBuilder.WithAccessToken(accessToken, a.accessExpireDuration)
 
-	refreshToken, err := a.createToken(user.ID, time.Duration(24*30))
+	refreshToken, err := a.createToken(user.ID, a.refreshExpireDuration)
 	if err != nil {
 		return nil, err
 	}
