@@ -2,11 +2,11 @@ export type User = {
   auth: { 
     access: {
       token: string;
-      expireAt: number;
+      expireAt: number | null;
     };
     refresh: {
       token: string;
-      expireAt: number;
+      expireAt: number | null;
     };
   };
   user : {

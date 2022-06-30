@@ -9,11 +9,11 @@ const getDefaultUser = (): User => {
       auth : {
         access : {
           token : "",
-          expireAt : 0,
+          expireAt : null,
         },
         refresh : {
           token : "",
-          expireAt : 0,
+          expireAt : null,
         }
       },
       user : {
