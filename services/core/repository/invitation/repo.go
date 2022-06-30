@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Repository struct {
@@ -42,10 +41,12 @@ func (r *Repository) AcceptInvitation(userID string, code string) error {
 		QueryRow()
 
 	if err := row.Scan(&recipientEmail); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return service.UserNotFoundErr
+		}
+		
 		return err
 	}
-
-	blogger.Println(recipientEmail)
 
 	row = sq.Update("invitations").
 		Set("status", models.ACCEPTED).
@@ -71,8 +72,6 @@ func (r *Repository) AcceptInvitation(userID string, code string) error {
 		return err
 	}
 
-	blogger.Println(workspaceID)
-
 	_, err = sq.Insert("workspace_accesses").
 		Columns("workspace_id", "user_id").
 		Values(workspaceID, userID).
@@ -97,8 +96,6 @@ func (r *Repository) AcceptInvitation(userID string, code string) error {
 
 		return err
 	}
-
-	blogger.Println("END")
 
 	if err = tx.Commit(); err != nil {
 		return err

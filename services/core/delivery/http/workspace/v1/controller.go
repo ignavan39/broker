@@ -55,7 +55,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		blogger.Errorf("[Create] Error: %s", err)
+		blogger.Errorf("[WorkspaceController][Create] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -178,14 +178,10 @@ func (c *Controller) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	blogger.Println("decoded")
-
 	if err := payload.Validate(); err != nil {
 		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	blogger.Println("validated")
 
 	workspaceID := chi.URLParam(r, "workspaceID")
 
@@ -203,7 +199,6 @@ func (c *Controller) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 
 	adminID := middleware.GetUserIdFromContext(ctx)
 
-	blogger.Println("params got")
 	err := c.workspaceService.ChangeUserRole(payload, adminID, userID, workspaceID)
 
 	if err != nil {
