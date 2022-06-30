@@ -17,29 +17,32 @@ import (
 )
 
 type AuthService struct {
-	signingKey           []byte
-	expireDuration       time.Duration
-	userRepository       repository.UserRepository
-	invitationRepository repository.InvitationRepository
-	mailer               mailer.Mailer
-	cache                cache.Cache[int]
+	signingKey            []byte
+	accessExpireDuration  time.Duration
+	refreshExpireDuration time.Duration
+	userRepository        repository.UserRepository
+	invitationRepository  repository.InvitationRepository
+	mailer                mailer.Mailer
+	cache                 cache.Cache[int]
 }
 
 func NewAuthService(
 	signingKey []byte,
-	expireDuration time.Duration,
+	accessExpireDuration time.Duration,
+	refreshExpireDuration time.Duration,
 	userRepository repository.UserRepository,
 	invitationRepository repository.InvitationRepository,
 	cache cache.Cache[int],
 	mailer mailer.Mailer,
 ) *AuthService {
 	return &AuthService{
-		signingKey:           signingKey,
-		expireDuration:       expireDuration,
-		userRepository:       userRepository,
-		invitationRepository: invitationRepository,
-		cache:                cache,
-		mailer:               mailer,
+		signingKey:            signingKey,
+		accessExpireDuration:  accessExpireDuration,
+		refreshExpireDuration: refreshExpireDuration,
+		userRepository:        userRepository,
+		invitationRepository:  invitationRepository,
+		cache:                 cache,
+		mailer:                mailer,
 	}
 }
 
@@ -55,19 +58,19 @@ func (a *AuthService) SignUp(ctx context.Context, payload dto.SignUpPayload) (*d
 
 	payloadBuilder := dto.NewSignPayloadResponseBuilder().WithUser(*user)
 
-	accessToken, err := a.createToken(user.ID, a.expireDuration)
+	accessToken, err := a.createToken(user.ID, a.accessExpireDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	payloadBuilder.WithAccessToken(accessToken)
+	payloadBuilder.WithAccessToken(accessToken, a.accessExpireDuration)
 
 	refreshToken, err := a.createToken(user.ID, time.Duration(24*30))
 	if err != nil {
 		return nil, err
 	}
 
-	payloadBuilder.WithRefreshToken(refreshToken)
+	payloadBuilder.WithRefreshToken(refreshToken, a.refreshExpireDuration)
 
 	res := payloadBuilder.Exec()
 
@@ -94,19 +97,19 @@ func (a *AuthService) SignIn(payload dto.SignInPayload) (*dto.SignResponse, erro
 
 	payloadBuilder := dto.NewSignPayloadResponseBuilder().WithUser(*user)
 
-	accessToken, err := a.createToken(user.ID, a.expireDuration)
+	accessToken, err := a.createToken(user.ID, a.accessExpireDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	payloadBuilder.WithAccessToken(accessToken)
+	payloadBuilder.WithAccessToken(accessToken, a.accessExpireDuration)
 
-	refreshToken, err := a.createToken(user.ID, time.Duration(24*30))
+	refreshToken, err := a.createToken(user.ID, a.refreshExpireDuration)
 	if err != nil {
 		return nil, err
 	}
 
-	payloadBuilder.WithRefreshToken(refreshToken)
+	payloadBuilder.WithRefreshToken(refreshToken, a.refreshExpireDuration)
 
 	res := payloadBuilder.Exec()
 	return &res, err
