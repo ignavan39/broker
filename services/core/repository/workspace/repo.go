@@ -247,9 +247,9 @@ func (r *Repository) UpdateWorkspaceAccess(accessType string, userID string, wor
 	return nil
 }
 
-func (r *Repository) DeleteWorkspaceAccess(deletedUserID string, workspaceID string) error {
+func (r *Repository) DeleteWorkspaceAccess(userID string, workspaceID string) error {
 	_, err := sq.Delete("workspace_accesses").
-		Where(sq.Eq{"user_id": deletedUserID, "workspace_id": workspaceID}, sq.NotEq{`"type"`: models.ADMIN}).
+		Where(sq.Eq{"user_id": userID, "workspace_id": workspaceID}, sq.NotEq{`"type"`: models.ADMIN}).
 		RunWith(r.pool.Write()).
 		PlaceholderFormat(sq.Dollar).
 		Exec()
