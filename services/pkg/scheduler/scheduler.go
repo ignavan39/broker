@@ -27,7 +27,7 @@ func NewScheduler(frequency time.Duration, ctx context.Context, callback func(ct
 func (s *Scheduler) start() {
 	go func() {
 		for {
-			<- s.ticker.C
+			<-s.ticker.C
 			err := s.callback(s.ctx)
 			if err != nil {
 				s.err <- err

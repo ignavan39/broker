@@ -53,7 +53,11 @@ func NewApp(config config.Config) *App {
 
 	pgConn, err := pg.NewReadAndWriteConnection(ctx, a.config.Database, a.config.Database, nil)
 	if err != nil {
-		blogger.Fatalln(err)
+		time.Sleep(10 * time.Second)
+		pgConn, err = pg.NewReadAndWriteConnection(ctx, a.config.Database, a.config.Database, nil)
+		if err != nil {
+			blogger.Fatalln(err)
+		}
 	}
 
 	blogger.Info("Database connection established")

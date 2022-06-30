@@ -5,9 +5,12 @@ import "time"
 type WorkspaceAccessesType = string
 
 var (
-	ADMIN WorkspaceAccessesType = "ADMIN"
-	USER  WorkspaceAccessesType = "USER"
+	ADMIN     WorkspaceAccessesType = "ADMIN"
+	USER      WorkspaceAccessesType = "USER"
+	MODERATOR WorkspaceAccessesType = "MODERATOR"
 )
+
+var Roles = []WorkspaceAccessesType{ADMIN, USER, MODERATOR}
 
 type WorkspaceAccess struct {
 	ID     string                `json:"id"`

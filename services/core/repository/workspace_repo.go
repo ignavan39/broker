@@ -10,4 +10,6 @@ type WorkspaceRepository interface {
 	GetWorkspaceByUserId(userID string, workspaceID string) (*models.Workspace, error)
 	GetAccessByUserId(userID string, workspaceID string) (*string, error)
 	GetWorkspaceUsersCount(workspaceID string) (int, error)
+	UpdateWorkspaceAccess(accessType string, userID string, workspaceID string) error
+	DeleteWorkspaceAccess(userID string, workspaceID string) error
 }

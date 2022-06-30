@@ -23,7 +23,7 @@ func NewInvitationService(
 	}
 }
 
-func (s *InvitationService) SendInvitation(payload dto.SendInvitationPayload,
+func (s *InvitationService) CreateInvitation(payload dto.SendInvitationPayload,
 	senderID string,
 	workspaceID string) (*dto.SendInvitationResponse, error) {
 	accessType, err := s.workspaceRepository.GetAccessByUserId(senderID, workspaceID)
