@@ -63,9 +63,15 @@ export const Navbar = () => {
   const logout = () => {
     setUser({
       ...user,
-      auth: {
-        accessToken: "",
-        refreshToken: "",
+      auth : {
+        access : {
+          token : "",
+          expireAt : 0,
+        },
+        refresh : {
+          token : "",
+          expireAt : 0,
+        }
       },
     });
     localStorage.removeItem("user");

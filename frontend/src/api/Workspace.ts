@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Host } from "../config";
-import { WorkspaceList, WorkspaceListItem } from "../types/Worpkspace";
+import { WorkspaceList, WorkspaceListItem } from "../types/Workspace";
 
 export const getWorkspaces = async (): Promise<{
   workspaces: WorkspaceList;
