@@ -228,7 +228,7 @@ func (r *Repository) GetWorkspaceUsersCount(workspaceID string) (int, error) {
 	return usersCount, nil
 }
 
-func (r *Repository) UpdateUserWorkspaceAccess(accessType string, userID string, workspaceID string) error {
+func (r *Repository) UpdateWorkspaceAccess(accessType string, userID string, workspaceID string) error {
 	_, err := sq.Update("workspace_accesses").
 		Set(`"type"`, accessType).
 		Where(sq.Eq{"user_id": userID, "workspace_id": workspaceID}).
@@ -247,7 +247,7 @@ func (r *Repository) UpdateUserWorkspaceAccess(accessType string, userID string,
 	return nil
 }
 
-func (r *Repository) DeleteUserFromWorkspace(deletedUserID string, workspaceID string) error {
+func (r *Repository) DeleteWorkspaceAccess(deletedUserID string, workspaceID string) error {
 	_, err := sq.Delete("workspace_accesses").
 		Where(sq.Eq{"user_id": deletedUserID, "workspace_id": workspaceID}, sq.NotEq{`"type"`: models.ADMIN}).
 		RunWith(r.pool.Write()).

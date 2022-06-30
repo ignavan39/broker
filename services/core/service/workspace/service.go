@@ -155,7 +155,7 @@ func (s *WorkspaceService) ChangeUserRole(payload dto.ChangeUserRoleWorkspacePay
 		return service.WorkspaceAccessDeniedErr
 	}
 
-	if err := s.workspaceRepository.UpdateUserWorkspaceAccess(payload.Role, userID, workspaceID); err != nil {
+	if err := s.workspaceRepository.UpdateWorkspaceAccess(payload.Role, userID, workspaceID); err != nil {
 		return err
 	}
 
@@ -173,7 +173,7 @@ func (s *WorkspaceService) BanUser(userID string, bannedUserID string, workspace
 		return service.WorkspaceAccessDeniedErr
 	}
 
-	err = s.workspaceRepository.DeleteUserFromWorkspace(bannedUserID, workspaceID)
+	err = s.workspaceRepository.DeleteWorkspaceAccess(bannedUserID, workspaceID)
 
 	if err != nil {
 		return err
