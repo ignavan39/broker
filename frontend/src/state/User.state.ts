@@ -43,6 +43,11 @@ export const userIsLoggined = selector({
   get: ({ get }) => {
     const user = get(userState);
 
-    return user?.auth.access.token?.length;
+    const now = new Date().getTime();
+
+    return user?.auth.access.token?.length 
+        && user.auth.access?.expireAt
+        && now > user.auth.access.expireAt;
   },
 });
+
