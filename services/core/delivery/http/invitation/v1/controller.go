@@ -48,7 +48,7 @@ func (c *Controller) SendInvitation(w http.ResponseWriter, r *http.Request) {
 
 	userID := middleware.GetUserIdFromContext(ctx)
 
-	res, err := c.invitationService.SendInvitation(payload, userID, workspaceID)
+	res, err := c.invitationService.CreateInvitation(payload, userID, workspaceID)
 
 	if err != nil {
 		if errors.Is(err, service.DuplicateInvitationErr) {
@@ -158,5 +158,5 @@ func (c *Controller) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpext.JSON(w, nil, http.StatusOK)
+	httpext.EmptyResponse(w, http.StatusOK)
 }

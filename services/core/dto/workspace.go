@@ -3,6 +3,7 @@ package dto
 import (
 	"broker/core/models"
 	"errors"
+	"strings"
 )
 
 type CreateWorkspacePayload struct {
@@ -72,4 +73,18 @@ type GetWorkspaceInfoResponse struct {
 	Name       string         `json:"name"`
 	Peers      []PeerResponse `json:"peers"`
 	UsersCount int            `json:"usersCount"`
+}
+
+type ChangeUserRoleWorkspacePayload struct {
+	Role models.WorkspaceAccessesType `json:"role"`
+}
+
+func (p *ChangeUserRoleWorkspacePayload) Validate() error {
+	for _, role := range models.Roles {
+		if strings.EqualFold(role, p.Role) {
+			return nil
+		}
+	}
+
+	return errors.New("role must be not empty string")
 }
