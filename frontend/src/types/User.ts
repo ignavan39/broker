@@ -1,5 +1,5 @@
 export type User = {
-  auth: { 
+  auth: {
     access: {
       token: string;
       expireAt: number | null;
