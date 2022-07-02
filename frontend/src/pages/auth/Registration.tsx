@@ -6,6 +6,7 @@ import { userState } from "../../state/User.state";
 import { User } from "../../types/User";
 import { ErrorPopup } from "../../components/ErrorPopup";
 import { authorizationService } from "../../api";
+import { errorState } from "../../state/Error.state";
 const Container = styled.div`
   display: flex;
   justify-content: center;
@@ -82,8 +83,7 @@ const FormButton = styled.div`
 `;
 
 export const Registration = () => {
-  const [err, setErr] = useState<string | null>(null);
-  const [errorPopupState, setOpenPopupState] = useState<boolean>(false);
+  const [err, setErr] = useRecoilState(errorState);
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState<{
     password: string;
@@ -136,17 +136,11 @@ export const Registration = () => {
       navigate("/");
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
-      setOpenPopupState(true);
       setErr(message);
     }
   };
   return (
     <Container>
-      {errorPopupState && err ? (
-        <ErrorPopup err={err} setOpen={setOpenPopupState} />
-      ) : (
-        <></>
-      )}
       <Form onSubmit={onSubmit}>
         <Header>Register</Header>
         <FormInput>

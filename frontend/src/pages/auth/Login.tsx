@@ -4,6 +4,7 @@ import { useRecoilState } from "recoil";
 import styled from "styled-components";
 import { authorizationService } from "../../api";
 import { ErrorPopup } from "../../components/ErrorPopup";
+import { errorState } from "../../state/Error.state";
 import { userState } from "../../state/User.state";
 import { User } from "../../types/User";
 const Container = styled.div`
@@ -82,8 +83,7 @@ const FormButton = styled.div`
 `;
 
 export const Login = () => {
-  const [err, setErr] = useState<string | null>(null);
-  const [errorPopupState, setOpenPopupState] = useState<boolean>(false);
+  const [err, setErr] = useRecoilState(errorState);
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
     password: user.user.password ?? "",
@@ -120,7 +120,6 @@ export const Login = () => {
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : "unknown error";
-        setOpenPopupState(true);
         setErr(message);
       }
     })();
@@ -145,17 +144,11 @@ export const Login = () => {
       navigate("/");
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
-      setOpenPopupState(true);
       setErr(message);
     }
   };
   return (
     <Container>
-      {errorPopupState && err ? (
-        <ErrorPopup err={err} setOpen={setOpenPopupState} />
-      ) : (
-        <></>
-      )}
       <Form onSubmit={onSubmit}>
         <Header>Login</Header>
         <FormInput>

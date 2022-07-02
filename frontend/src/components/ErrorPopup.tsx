@@ -1,3 +1,4 @@
+import { SetterOrUpdater } from "recoil";
 import styled from "styled-components";
 
 const Button = styled.button`
@@ -20,7 +21,7 @@ const Button = styled.button`
 
 const ErrorContainer = styled.div`
   height: 10rem;
-  width: 20rem;
+  width: 30rem;
   border-radius: 15px;
   display: flex;
   font-size: 1rem;
@@ -30,25 +31,36 @@ const ErrorContainer = styled.div`
   align-items: center;
   background-color: white;
   top: 20px;
-  z-index:10;
+  right: 42rem;
+  z-index: 10;
   position: absolute;
   box-shadow: 15px 10px 10px #dedede;
-  animation-name            : displaceContent;
-  animation-duration        : 1s;
-  animation-delay           : 0s;
-  animation-iteration-count : 1;
-  animation-fill-mode       : forwards;
+  animation-name: displaceContent;
+  animation-duration: 1s;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
   @keyframes displaceContent {
-    from { transform : translateX(20rem) }
-    to   { transform : translateX(0rem) } 
+    from {
+      transform: translateX(60rem);
+    }
+    to {
+      transform: translateX(-3rem);
+    }
   }
 `;
 
-export const ErrorPopup = ({ err, setOpen }: { err: string, setOpen(arg: boolean):void }) => {
+export const ErrorPopup = ({
+  err,
+  setOpen,
+}: {
+  err: string;
+  setOpen: SetterOrUpdater<string | null>;
+}) => {
   return (
-        <ErrorContainer>
-            <div style={{margin:'2rem'}}>{err}</div>
-          <Button onClick={() => setOpen(false)}>Close</Button>
-        </ErrorContainer>
+    <ErrorContainer>
+      <div style={{ margin: "2rem" }}>{err}</div>
+      <Button onClick={() => setOpen(null)}>Close</Button>
+    </ErrorContainer>
   );
 };

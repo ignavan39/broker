@@ -5,6 +5,8 @@ import { ErrorPopup } from "../../components/ErrorPopup";
 import { Navbar } from "../../components/Navbar";
 import { WorkspaceItem } from "../../components/workspace/Workspace";
 import { workspaceService } from "../../api/Workspace";
+import { useRecoilState } from "recoil";
+import { errorState } from "../../state/Error.state";
 
 const Container = styled.div`
   display: flex;
@@ -67,8 +69,7 @@ export const Workspaces = () => {
   const [workspaces, setWorkspaces] = useState<WorkspaceList>(
     [] as WorkspaceList
   );
-  const [err, setErr] = useState<string | null>(null);
-  const [errorPopupState, setOpenPopupState] = useState<boolean>(false);
+  const [err, setErr] = useRecoilState(errorState);
   const [state, setState] = useState({ name: "", isPrivate: false });
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +88,6 @@ export const Workspaces = () => {
       workspaces.push(response);
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
-      setOpenPopupState(true);
       setErr(message);
     }
   };
@@ -99,7 +99,6 @@ export const Workspaces = () => {
         setWorkspaces(response.workspaces);
       } catch (e) {
         const message = e instanceof Error ? e.message : "unknown error";
-        setOpenPopupState(true);
         setErr(message);
       }
     })();
@@ -108,11 +107,6 @@ export const Workspaces = () => {
     <>
       <Navbar />
       <Container>
-        {errorPopupState && err ? (
-          <ErrorPopup err={err} setOpen={setOpenPopupState} />
-        ) : (
-          <></>
-        )}
         <CreateWorkspaceContainer onSubmit={onSubmit}>
           <input
             type={"text"}
