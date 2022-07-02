@@ -6,23 +6,29 @@ const getDefaultUser = (): User => {
   const cache = localStorage.getItem("user");
   if (!cache) {
     return {
-      user: {
-        email: "",
+      auth : {
+        access : {
+          token : "",
+          expireAt : null,
+        },
+        refresh : {
+          token : "",
+          expireAt : null,
+        }
+      },
+      user : {
         firstName: "",
         lastName: "",
-        avatarUrl: "",
+        email: "",
         password: "",
         nickname: "",
-      },
-      auth: {
-        accessToken: "",
-        refreshToken: "",
-      },
-    };
+        avatarUrl: "",
+      }
+    }
   } else {
     const user = JSON.parse(cache) as User;
     axios.defaults.headers.common["Authorization"] =
-      "Bearer " + user.auth.accessToken;
+      "Bearer " + user.auth.access.token;
     return user;
   }
 };
@@ -37,6 +43,11 @@ export const userIsLoggined = selector({
   get: ({ get }) => {
     const user = get(userState);
 
-    return user?.auth.accessToken?.length;
+    const now = new Date().getTime();
+
+    return user?.auth.access.token?.length 
+        && user.auth.access?.expireAt
+        && now > user.auth.access.expireAt;
   },
 });
+
