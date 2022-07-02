@@ -3,10 +3,6 @@ import { Host } from "../config";
 import { User } from "../types/User";
 
 export type AuthorizationResponseDto = User;
-export enum AuthorizationActionType {
-  signIn = "signIn",
-  signUp = "signUp",
-}
 
 export type SignUpPayload = {
   email: string;
@@ -23,16 +19,16 @@ export type SignInPayload = {
 };
 
 export type AuthorizationService = {
-  [AuthorizationActionType.signIn]: (
+  signIn: (
     payload: SignInPayload
   ) => Promise<AuthorizationResponseDto>;
-  [AuthorizationActionType.signUp]: (
+  signUp: (
     payload: SignUpPayload
   ) => Promise<AuthorizationResponseDto>;
 };
 
 export const authorizationService: AuthorizationService = {
-  [AuthorizationActionType.signIn]: async (
+  signIn: async (
     payload: SignInPayload
   ): Promise<AuthorizationResponseDto> => {
     const url = Host + "/auth/signIn";
@@ -42,7 +38,7 @@ export const authorizationService: AuthorizationService = {
     return user.data;
   },
 
-  [AuthorizationActionType.signUp]: async (
+  signUp: async (
     payload: SignUpPayload
   ): Promise<AuthorizationResponseDto> => {
     const url = Host + "/auth/signUp";
