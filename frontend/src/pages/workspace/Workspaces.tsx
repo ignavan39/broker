@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { createWorkspace, getWorkspaces } from "../api/Workspace";
-import { WorkspaceList } from "../types/Workspace";
-import { ErrorPopup } from "./ErrorPopup";
-import { Navbar } from "./Navbar";
-import { WorkspaceItem } from "./Workspace";
+import { WorkspaceList } from "../../types/Workspace";
+import { ErrorPopup } from "../../components/ErrorPopup";
+import { Navbar } from "../../components/Navbar";
+import { WorkspaceItem } from "../../components/workspace/Workspace";
+import { workspaceService } from "../../api/Workspace";
 
 const Container = styled.div`
   display: flex;
@@ -83,7 +83,7 @@ export const Workspaces = () => {
     e.preventDefault();
     try {
       console.log(state);
-      let response = await createWorkspace(state.name, state.isPrivate);
+      let response = await workspaceService.create(state.name, state.isPrivate);
       workspaces.push(response);
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
@@ -95,7 +95,7 @@ export const Workspaces = () => {
   useEffect(() => {
     (async () => {
       try {
-        let response = await getWorkspaces();
+        let response = await workspaceService.getAll();
         setWorkspaces(response.workspaces);
       } catch (e) {
         const message = e instanceof Error ? e.message : "unknown error";

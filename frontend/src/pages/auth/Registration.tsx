@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
-import { sign } from "../../api";
 import { userState } from "../../state/User.state";
 import { User } from "../../types/User";
-import { ErrorPopup } from "../ErrorPopup";
+import { ErrorPopup } from "../../components/ErrorPopup";
+import { authorizationService } from "../../api";
 const Container = styled.div`
   display: flex;
   justify-content: center;
@@ -116,8 +116,7 @@ export const Registration = () => {
       if (!state.code) {
         throw new Error("Invalid Invitation Code");
       }
-      const apiResponse = await sign({
-        operation: "sign_up",
+      const apiResponse = await authorizationService.signUp({
         password: state.password,
         email: state.email,
         code: Number.parseInt(state.code),

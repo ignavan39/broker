@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import { Chat } from "./Chat";
-import { Navbar } from "./Navbar";
+import { Chat } from "../Chat";
+import { Navbar } from "../Navbar";
 import { Settings } from "./Settings";
 
 const Container = styled.div`

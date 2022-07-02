@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
-import { sign } from "../../api";
+import { authorizationService } from "../../api";
+import { ErrorPopup } from "../../components/ErrorPopup";
 import { userState } from "../../state/User.state";
 import { User } from "../../types/User";
-import { ErrorPopup } from "../ErrorPopup";
 const Container = styled.div`
   display: flex;
   justify-content: center;
@@ -103,10 +103,9 @@ export const Login = () => {
     (async () => {
       try {
         if (user.user.password.length && user.user.email.length) {
-          const apiResponse = await sign({
+          const apiResponse = await authorizationService.signIn({
             password: user.user.password,
             email: user.user.email,
-            operation: "sign_in",
           });
           const updatedUser: User = {
             ...apiResponse,
@@ -130,10 +129,9 @@ export const Login = () => {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const apiResponse = await sign({
+      const apiResponse = await authorizationService.signIn({
         password: state.password,
         email: state.email,
-        operation: "sign_in",
       });
       const updatedUser: User = {
         ...apiResponse,

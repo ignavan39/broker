@@ -2,10 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { RecoilRoot, useRecoilValue } from "recoil";
-import { Login } from "./components/auth/Login";
-import { Registration } from "./components/auth/Registration";
-import { Home } from "./components/Home";
-import { Workspaces } from "./components/Workspaces";
+import { Home } from "./components/chat/Home";
+import { Login } from "./pages/auth/Login";
+import { Registration } from "./pages/auth/Registration";
+import { Workspaces } from "./pages/workspace/Workspaces";
 import { userIsLoggined } from "./state/User.state";
 
 const BaseRouter = () => {

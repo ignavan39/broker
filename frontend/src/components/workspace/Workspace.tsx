@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { WorkspaceListItem } from "../types/Workspace";
+import { WorkspaceListItem } from "../../types/Workspace";
 
 const Container = styled.div`
   min-height: 5rem;
