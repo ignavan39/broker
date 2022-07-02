@@ -4,6 +4,7 @@ import (
 	"broker/core/models"
 	"errors"
 	"regexp"
+	"time"
 )
 
 type SignPayloadBase struct {
@@ -19,9 +20,18 @@ type SignUpPayload struct {
 	Code      int    `json:"code"`
 }
 
+type TokenResponse struct {
+	Token    string    `json:"token"`
+	ExpireAt time.Time `json:"expireAt"`
+}
+type AuthResponse struct {
+	Access  TokenResponse `json:"access"`
+	Refresh TokenResponse `json:"refresh"`
+}
+
 type SignResponse struct {
-	User models.User       `json:"user"`
-	Auth map[string]string `json:"auth"`
+	User models.User  `json:"user"`
+	Auth AuthResponse `json:"auth"`
 }
 
 type SignPayloadResponseBuilder struct {
@@ -32,7 +42,7 @@ func NewSignPayloadResponseBuilder() *SignPayloadResponseBuilder {
 	return &SignPayloadResponseBuilder{
 		payload: SignResponse{
 			User: models.User{},
-			Auth: make(map[string]string),
+			Auth: AuthResponse{},
 		},
 	}
 }
@@ -42,13 +52,13 @@ func (sprb *SignPayloadResponseBuilder) WithUser(user models.User) *SignPayloadR
 	return sprb
 }
 
-func (sprb *SignPayloadResponseBuilder) WithAccessToken(accessToken string) *SignPayloadResponseBuilder {
-	sprb.payload.Auth["accessToken"] = accessToken
+func (sprb *SignPayloadResponseBuilder) WithAccessToken(token TokenResponse) *SignPayloadResponseBuilder {
+	sprb.payload.Auth.Access = token
 	return sprb
 }
 
-func (sprb *SignPayloadResponseBuilder) WithRefreshToken(refreshToken string) *SignPayloadResponseBuilder {
-	sprb.payload.Auth["refreshToken"] = refreshToken
+func (sprb *SignPayloadResponseBuilder) WithRefreshToken(token TokenResponse) *SignPayloadResponseBuilder {
+	sprb.payload.Auth.Refresh = token
 	return sprb
 }
 

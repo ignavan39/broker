@@ -29,6 +29,6 @@ export const sign = async (
     ...payload,
   });
   axios.defaults.headers.common["Authorization"] =
-    "Bearer " + user.data.auth.accessToken;
+    "Bearer " + user.data.auth.access.token;
   return user.data;
 };

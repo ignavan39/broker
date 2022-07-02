@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { createWorkspace, getWorkspaces } from "../api/Workspace";
-import { WorkspaceList } from "../types/Worpkspace";
+import { WorkspaceList } from "../types/Workspace";
 import { ErrorPopup } from "./ErrorPopup";
 import { Navbar } from "./Navbar";
-import { WorkspaceItem } from "./Worpkspace";
+import { WorkspaceItem } from "./Workspace";
 
 const Container = styled.div`
   display: flex;
