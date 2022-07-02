@@ -9,3 +9,9 @@ core - the logic of chats and workspaces
 ```bash
 $ docker-compose up --build
 ```
+local start frontend
+```bash
+$ cd ./frontend
+$ yarn
+$ yarn start
+```
