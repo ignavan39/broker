@@ -47,7 +47,7 @@ export const userIsLoggined = selector({
 
     return user?.auth.access.token?.length 
         && user.auth.access?.expireAt
-        && now > user.auth.access.expireAt;
+        && now < user.auth.access.expireAt;
   },
 });
 
