@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"time"
 
-	"broker/pkg/cache/redis"
+	cache "broker/pkg/cache/redis"
 	mailer "broker/pkg/mailer/mock"
 	"broker/pkg/pg"
 	"context"
@@ -94,7 +94,7 @@ func NewApp(config config.Config) *App {
 	mailGun := mailer.NewMockMailer()
 	userRepo := userRepo.NewRepository(pgConn)
 	invitationRepo := invitationRepo.NewRepository(pgConn)
-	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.ExpireDuration, userRepo, invitationRepo, authCache, mailGun)
+	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.AccessExpireDuration, a.config.JWT.RefreshExpireDuration, userRepo, invitationRepo, authCache, mailGun)
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
 

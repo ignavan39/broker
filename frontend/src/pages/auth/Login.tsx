@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
-import { sign } from "../api";
-import { userState } from "../state/User.state";
-import { User } from "../types/User";
+import { authorizationService } from "../../api";
+import { ErrorPopup } from "../../components/ErrorPopup";
+import { errorState } from "../../state/Error.state";
+import { userState } from "../../state/User.state";
+import { User } from "../../types/User";
 const Container = styled.div`
   display: flex;
   justify-content: center;
@@ -80,18 +82,12 @@ const FormButton = styled.div`
   margin: 0.2rem 0;
 `;
 
-type AuthProp = {
-  register: boolean;
-};
-
-export const Auth = (prop: AuthProp) => {
+export const Login = () => {
+  const [err, setErr] = useRecoilState(errorState);
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
-    password: user.password ?? "",
-    email: user.email ?? "",
-    firstName: !prop.register ? user.firstName ?? "" : "",
-    lastName: !prop.register ? user.lastName ?? "" : "",
-    nickname: !prop.register ? user.nickname ?? "" : "",
+    password: user.user.password ?? "",
+    email: user.user.email ?? "",
   });
   const navigate = useNavigate();
 
@@ -103,25 +99,58 @@ export const Auth = (prop: AuthProp) => {
     });
   };
 
+  useEffect(() => {
+    (async () => {
+      try {
+        if (user.user.password.length && user.user.email.length) {
+          const apiResponse = await authorizationService.signIn({
+            password: user.user.password,
+            email: user.user.email,
+          });
+          const updatedUser: User = {
+            ...apiResponse,
+            user: {
+              ...apiResponse.user,
+              password: state.password,
+            },
+          };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          navigate("/");
+        }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "unknown error";
+        setErr(message);
+      }
+    })();
+  }, []);
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let apiResponse = await sign(state, prop.register ? "signUp" : "signIn");
-    const newUser: User = {
-      ...user,
-      ...state,
-      auth: {
-        accessToken: apiResponse.auth.accessToken,
-        refreshToken: apiResponse.auth.refreshToken,
-      },
-    };
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    navigate("/");
+    try {
+      const apiResponse = await authorizationService.signIn({
+        password: state.password,
+        email: state.email,
+      });
+      const updatedUser: User = {
+        ...apiResponse,
+        user: {
+          ...apiResponse.user,
+          password: state.password,
+        },
+      };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(apiResponse));
+      navigate("/");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "unknown error";
+      setErr(message);
+    }
   };
   return (
     <Container>
       <Form onSubmit={onSubmit}>
-        {prop.register ? <Header>Register</Header> : <Header>Login</Header>}
+        <Header>Login</Header>
         <FormInput>
           <Input
             type={"email"}
@@ -138,51 +167,17 @@ export const Auth = (prop: AuthProp) => {
             value={state.password}
             name="password"
           />
-          {prop.register ? (
-            <>
-               <Input
-                type={"text"}
-                minLength={1}
-                placeholder="Nickname"
-                onInput={handleInput}
-                value={state.nickname}
-                name="nickname"
-              />
-              <Input
-                type={"text"}
-                minLength={1}
-                placeholder="First Name"
-                onInput={handleInput}
-                value={state.firstName}
-                name="firstName"
-              />
-              <Input
-                type={"text"}
-                minLength={1}
-                placeholder="Last Name"
-                onInput={handleInput}
-                value={state.lastName}
-                name="lastName"
-              />
-            </>
-          ) : (
-            <></>
-          )}
         </FormInput>
         <FormButton>
           <Button>Submit</Button>
-          {!prop.register ? (
-            <Button
-              style={{ backgroundColor: "#ff9900" }}
-              onClick={() => {
-                navigate("/register");
-              }}
-            >
-              Registration
-            </Button>
-          ) : (
-            <></>
-          )}
+          <Button
+            style={{ backgroundColor: "#ff9900" }}
+            onClick={() => {
+              navigate("/register");
+            }}
+          >
+            Registration
+          </Button>
         </FormButton>
       </Form>
     </Container>

@@ -9,9 +9,10 @@ import (
 )
 
 type JWTConfig struct {
-	HashSalt       string        `env:"HASH_SALT" envDefault:"super_secret"`
-	SigningKey     string        `env:"SIGNING_KEY" envDefault:"signing_key"`
-	ExpireDuration time.Duration `env:"EXPIRE_DURATION" envDefault:"24h"`
+	HashSalt              string        `env:"HASH_SALT" envDefault:"super_secret"`
+	SigningKey            string        `env:"SIGNING_KEY" envDefault:"signing_key"`
+	AccessExpireDuration  time.Duration `env:"ACCESS_EXPIRE_DURATION" envDefault:"30m"`
+	RefreshExpireDuration time.Duration `env:"REFRESH_EXPIRE_DURATION" envDefault:"168h"`
 }
 
 type RedisConfig struct {
@@ -83,16 +84,25 @@ func Init() error {
 		QueueHashSalt:    os.Getenv("QUEUE_HASH_SALT"),
 	}
 
-	expireDurationRaw := os.Getenv("EXPIRE_DURATION")
-	expireDuration, err := time.ParseDuration(expireDurationRaw)
+	accessExpireDurationRaw := os.Getenv("ACCESS_EXPIRE_DURATION")
+	accessExpireDuration, err := time.ParseDuration(accessExpireDurationRaw)
+
 	if err != nil {
-		return fmt.Errorf("error for parsing EXPIRE_DURATION :%s", err)
+		return fmt.Errorf("error for parsing ACCESS_EXPIRE_DURATION :%s", err)
+	}
+
+	refreshExpireDurationRaw := os.Getenv("REFRESH_EXPIRE_DURATION")
+	refreshExpireDuration, err := time.ParseDuration(refreshExpireDurationRaw)
+
+	if err != nil {
+		return fmt.Errorf("error for parsing REFRESH_EXPIRE_DURATION :%s", err)
 	}
 
 	jwt := JWTConfig{
-		HashSalt:       os.Getenv("HASH_SALT"),
-		SigningKey:     os.Getenv("SIGNING_KEY"),
-		ExpireDuration: expireDuration,
+		HashSalt:              os.Getenv("HASH_SALT"),
+		SigningKey:            os.Getenv("SIGNING_KEY"),
+		AccessExpireDuration:  accessExpireDuration,
+		RefreshExpireDuration: refreshExpireDuration,
 	}
 
 	mailgunConfig := MailgunConfig{
