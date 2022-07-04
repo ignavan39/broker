@@ -30,7 +30,7 @@ func NewInvitationService(
 	}
 }
 
-func (s *InvitationService) StartScheduler(ctx context.Context) error {
+func (s *InvitationService) StartScheduler(ctx context.Context) {
 	duration := config.GetConfig().Invitation.InvitationExpireDuration
 
 	scheduler := scheduler.NewScheduler(duration, ctx, func(ctx context.Context) error {
@@ -48,13 +48,11 @@ func (s *InvitationService) StartScheduler(ctx context.Context) error {
 
 	go scheduler.Start()
 
-	err := <-scheduler.Error()
+	s.scheduler = *scheduler
+}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (s *InvitationService) ReadError() error {
+	return <-s.scheduler.Error()
 }
 
 func (s *InvitationService) CreateInvitation(payload dto.SendInvitationPayload,
