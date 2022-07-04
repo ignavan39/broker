@@ -33,11 +33,11 @@ func NewInvitationService(
 func (s *InvitationService) StartScheduler(ctx context.Context) {
 	duration := config.GetConfig().Invitation.InvitationExpireDuration
 
-	scheduler := scheduler.NewScheduler(duration, ctx, func(ctx context.Context) error {
+	scheduler := scheduler.NewScheduler(duration, func(ctx context.Context) error {
 		err := s.clearExpiredInvitations(duration)
 
 		if err != nil {
-			blogger.Panic(err)
+			blogger.Errorf("%s", err)
 			return err
 		}
 
@@ -46,7 +46,7 @@ func (s *InvitationService) StartScheduler(ctx context.Context) {
 		return nil
 	})
 
-	go scheduler.Start()
+	go scheduler.Start(ctx)
 
 	s.scheduler = *scheduler
 }
