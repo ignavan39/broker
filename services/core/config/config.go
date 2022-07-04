@@ -41,7 +41,8 @@ type MailgunConfig struct {
 }
 
 type InvitationConfig struct {
-	InvitationHashSalt string `env:"INVITATION_HASH_SALT" envDefault:"puper_secret"`
+	InvitationHashSalt       string        `env:"INVITATION_HASH_SALT" envDefault:"puper_secret"`
+	InvitationExpireDuration time.Duration `env:"INVITATION_EXPIRE_DURATION" envDefault:"5s"`
 }
 
 type Config struct {
@@ -129,8 +130,15 @@ func Init() error {
 		DB:       int(redisDB),
 	}
 
+	invitationExpireDurationRaw := os.Getenv("INVITATION_EXPIRE_DURATION")
+	invitationExpireDuration, err := time.ParseDuration(invitationExpireDurationRaw)
+	if err != nil {
+		return fmt.Errorf("error for parsing INVITATION_EXPIRE_DURATION :%s", err)
+	}
+
 	invitation := InvitationConfig{
-		InvitationHashSalt: os.Getenv("INVITATION_HASH_SALT"),
+		InvitationHashSalt:       os.Getenv("INVITATION_HASH_SALT"),
+		InvitationExpireDuration: invitationExpireDuration,
 	}
 
 	config = Config{

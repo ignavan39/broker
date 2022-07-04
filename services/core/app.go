@@ -119,6 +119,9 @@ func NewApp(config config.Config) *App {
 	peerRouter := peer.NewRouter(peerController, authGuard)
 
 	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo)
+
+	invitationService.StartScheduler(ctx)
+
 	invitationController := invitation.NewController(invitationService)
 	invitationRouter := invitation.NewRouter(invitationController, *authGuard)
 

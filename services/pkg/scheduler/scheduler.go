@@ -20,11 +20,10 @@ func NewScheduler(frequency time.Duration, ctx context.Context, callback func(ct
 		ctx:      ctx,
 	}
 
-	s.start()
 	return s
 }
 
-func (s *Scheduler) start() {
+func (s *Scheduler) Start() {
 	go func() {
 		for {
 			<-s.ticker.C
