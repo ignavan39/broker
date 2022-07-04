@@ -120,7 +120,9 @@ func NewApp(config config.Config) *App {
 
 	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo)
 
-	invitationService.StartScheduler(ctx)
+	if err := invitationService.StartScheduler(ctx); err != nil {
+		blogger.Fatalln(err)
+	}
 
 	invitationController := invitation.NewController(invitationService)
 	invitationRouter := invitation.NewRouter(invitationController, *authGuard)
