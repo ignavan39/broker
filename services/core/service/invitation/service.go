@@ -1,16 +1,23 @@
 package invitation
 
 import (
+	"broker/core/config"
 	"broker/core/dto"
 	"broker/core/models"
 	"broker/core/repository"
 	"broker/core/service"
+	"broker/pkg/scheduler"
+	"context"
 	"strings"
+	"time"
+
+	blogger "github.com/sirupsen/logrus"
 )
 
 type InvitationService struct {
 	workspaceRepository  repository.WorkspaceRepository
 	invitationRepository repository.InvitationRepository
+	scheduler            scheduler.Scheduler
 }
 
 func NewInvitationService(
@@ -21,6 +28,31 @@ func NewInvitationService(
 		workspaceRepository:  workspaceRepository,
 		invitationRepository: invitationRepository,
 	}
+}
+
+func (s *InvitationService) StartScheduler(ctx context.Context) {
+	duration := config.GetConfig().Invitation.InvitationExpireDuration
+
+	scheduler := scheduler.NewScheduler(duration, func(ctx context.Context) error {
+		err := s.clearExpiredInvitations(duration)
+
+		if err != nil {
+			blogger.Errorf("%s", err)
+			return err
+		}
+
+		blogger.Info("Invitations cleared successfully")
+
+		return nil
+	})
+
+	go scheduler.Start(ctx)
+
+	s.scheduler = *scheduler
+}
+
+func (s *InvitationService) ReadError() error {
+	return <-s.scheduler.Error()
 }
 
 func (s *InvitationService) CreateInvitation(payload dto.SendInvitationPayload,
@@ -97,6 +129,16 @@ func (s *InvitationService) CancelInvitation(senderID string, invitationID strin
 
 func (s *InvitationService) AcceptInvitation(payload dto.AcceptInvitationPayload, userID string) error {
 	err := s.invitationRepository.AcceptInvitation(userID, payload.Code)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *InvitationService) clearExpiredInvitations(duration time.Duration) error {
+	err := s.invitationRepository.DeleteExpiredInvitations(duration)
 
 	if err != nil {
 		return err

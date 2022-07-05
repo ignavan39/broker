@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -244,4 +245,19 @@ func (r *Repository) CancelInvitation(userID string, invitationID string) (*mode
 	}
 
 	return &invitation, nil
+}
+
+func (r *Repository) DeleteExpiredInvitations(duration time.Duration) error {
+	_, err := sq.Update("invitations").
+		Set(`"status"`, models.EXPIRED).
+		Where(sq.GtOrEq{"extract(microseconds from NOW() - created_at)": duration}).
+		RunWith(r.pool.Write()).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

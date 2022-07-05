@@ -157,8 +157,8 @@ func (a *AuthService) createToken(id string, duration time.Duration) (*dto.Token
 		return nil, err
 	}
 
-	return &dto.TokenResponse {
-		Token: tokenString,
+	return &dto.TokenResponse{
+		Token:    tokenString,
 		ExpireAt: time.Now().Add(duration),
 	}, nil
 }

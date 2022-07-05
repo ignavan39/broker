@@ -9,26 +9,23 @@ type Scheduler struct {
 	callback func(ctx context.Context) error
 	err      chan error
 	ticker   time.Ticker
-	ctx      context.Context
 }
 
-func NewScheduler(frequency time.Duration, ctx context.Context, callback func(ctx context.Context) error) *Scheduler {
+func NewScheduler(frequency time.Duration, callback func(ctx context.Context) error) *Scheduler {
 	s := &Scheduler{
 		ticker:   *time.NewTicker(frequency),
 		callback: callback,
 		err:      make(chan error),
-		ctx:      ctx,
 	}
 
-	s.start()
 	return s
 }
 
-func (s *Scheduler) start() {
+func (s *Scheduler) Start(ctx context.Context) {
 	go func() {
 		for {
 			<-s.ticker.C
-			err := s.callback(s.ctx)
+			err := s.callback(ctx)
 			if err != nil {
 				s.err <- err
 			}

@@ -9,6 +9,7 @@ var (
 	PENDING  InvitationStatus = "PENDING"
 	ACCEPTED InvitationStatus = "ACCEPTED"
 	CANCELED InvitationStatus = "CANCELED"
+	EXPIRED InvitationStatus = "EXPIRED"
 
 	CREATED   SystemStatus = "CREATED"
 	SEND      SystemStatus = "SEND"

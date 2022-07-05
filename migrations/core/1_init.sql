@@ -67,7 +67,8 @@ CREATE TABLE messages (
 CREATE TYPE invitation_status AS ENUM (
     'PENDING',
     'ACCEPTED',
-    'CANCELED'
+    'CANCELED',
+    'EXPIRED'
 );
 
 CREATE TYPE invitation_system_status AS ENUM (
