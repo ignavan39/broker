@@ -131,7 +131,22 @@ services:
       broker:
         ipv4_address: 171.4.4.12
         aliases:
-          - app.broker.loc    
+          - core.broker.loc  
+
+  broker-smtp:
+    container_name: broker-smtp
+    build:
+      context: .
+      dockerfile: ./docker/smtp.dockerfile
+    ports:
+     - ${PORT:-8081}:80
+    env_file:
+      - ./services/smtp/.env
+    networks:
+      broker:
+        ipv4_address: 171.4.4.17
+        aliases:
+          - smtp.broker.loc    
 
 networks:
   broker:
