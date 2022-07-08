@@ -1,6 +1,7 @@
 package smtp
 
 import (
+	"broker/pkg/logger"
 	"broker/smtp/config"
 	delivery "broker/smtp/sender/delivery/http"
 	"broker/smtp/sender/services"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/go-chi/chi"
 	chim "github.com/go-chi/chi/middleware"
-	blogger "github.com/sirupsen/logrus"
 )
 
 func Start() {
@@ -29,15 +29,15 @@ func Start() {
 	})
 
 	if err := web.Start(); err != nil {
-		blogger.Fatal(err)
+		logger.Logger.Fatal(err)
 	}
 	appCloser := make(chan os.Signal)
 	signal.Notify(appCloser, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-appCloser
-		blogger.Info("[os.SIGNAL] close request")
+		logger.Logger.Info("[os.SIGNAL] close request")
 		go web.Stop()
-		blogger.Info("[os.SIGNAL] done")
+		logger.Logger.Info("[os.SIGNAL] done")
 	}()
 	web.WaitForDone()
 }

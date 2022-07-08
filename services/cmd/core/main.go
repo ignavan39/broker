@@ -3,17 +3,18 @@ package main
 import (
 	"broker/core"
 	"broker/core/config"
-
-	blogger "github.com/sirupsen/logrus"
+	"broker/pkg/logger"
 )
 
 func main() {
+	logger.Init()
+	
 	if err := config.Init(); err != nil {
-		blogger.Fatalln(err)
+		logger.Logger.Fatalln(err)
 	}
 
 	conf := config.GetConfig()
-	blogger.Printf("read config %v", conf)
+	logger.Logger.Info("read config %v", conf)
 
 	app := app.NewApp(conf)
 	app.Run()

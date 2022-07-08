@@ -24,6 +24,7 @@ import (
 	"time"
 
 	cache "broker/pkg/cache/redis"
+	"broker/pkg/logger"
 	mailer "broker/pkg/mailer/smtp"
 	"broker/pkg/pg"
 	"context"
@@ -36,8 +37,6 @@ import (
 
 	chim "github.com/go-chi/chi/middleware"
 	"github.com/streadway/amqp"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -56,11 +55,11 @@ func NewApp(config config.Config) *App {
 		time.Sleep(10 * time.Second)
 		pgConn, err = pg.NewReadAndWriteConnection(ctx, a.config.Database, a.config.Database, nil)
 		if err != nil {
-			blogger.Fatalln(err)
+			logger.Logger.Fatalln(err)
 		}
 	}
 
-	blogger.Info("Database connection established")
+	logger.Logger.Info("Database connection established")
 
 	connStr := fmt.Sprintf("amqp://%s:%s@%s:%d", config.AMQP.User, config.AMQP.Pass, config.AMQP.Host, config.AMQP.Port)
 	fmt.Println(connStr)
@@ -71,11 +70,11 @@ func NewApp(config config.Config) *App {
 		time.Sleep(10 * time.Second)
 		amqpConn, err = amqp.Dial(connStr)
 		if err != nil {
-			blogger.Fatalln(err)
+			logger.Logger.Fatalln(err)
 		}
 	}
 
-	blogger.Info("AMQP connection established")
+	logger.Logger.Info("AMQP connection established")
 
 	redis := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", config.Redis.Host, config.Redis.Port),
@@ -91,16 +90,16 @@ func NewApp(config config.Config) *App {
 
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
-	mailGun := mailer.NewSmtpMailer()
+	mailer := mailer.NewSmtpMailer()
 	userRepo := userRepo.NewRepository(pgConn)
 	invitationRepo := invitationRepo.NewRepository(pgConn)
-	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.AccessExpireDuration, a.config.JWT.RefreshExpireDuration, userRepo, invitationRepo, authCache, mailGun)
+	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.AccessExpireDuration, a.config.JWT.RefreshExpireDuration, userRepo, invitationRepo, authCache, mailer)
 	authController := auth.NewController(authService)
 	authRouter := auth.NewRouter(authController)
 
 	peerConsumer := peerConsumerAmqp.NewConsumer(amqpConn)
 	if err := peerConsumer.Init(); err != nil {
-		blogger.Fatalln(err)
+		logger.Logger.Fatalln(err)
 	}
 
 	peerPublisher := peerPublisherAmqp.NewPublisher(amqpConn)
@@ -118,13 +117,13 @@ func NewApp(config config.Config) *App {
 	peerController := peer.NewController(peerService)
 	peerRouter := peer.NewRouter(peerController, authGuard)
 
-	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo, mailGun)
+	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo, mailer)
 
 	invitationService.StartScheduler(ctx)
 
 	go func() {
 		if err := invitationService.ReadError(); err != nil {
-			blogger.Fatalln(err)
+			logger.Logger.Fatalln(err)
 		}
 	}()
 
@@ -146,15 +145,15 @@ func NewApp(config config.Config) *App {
 
 func (a *App) Run() {
 	if err := a.web.Start(); err != nil {
-		blogger.Fatal(err)
+		logger.Logger.Fatal(err)
 	}
 	appCloser := make(chan os.Signal)
 	signal.Notify(appCloser, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-appCloser
-		blogger.Info("[os.SIGNAL] close request")
+		logger.Logger.Info("[os.SIGNAL] close request")
 		go a.web.Stop()
-		blogger.Info("[os.SIGNAL] done")
+		logger.Logger.Info("[os.SIGNAL] done")
 	}()
 	a.web.WaitForDone()
 }

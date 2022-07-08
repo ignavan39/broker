@@ -4,12 +4,11 @@ import (
 	"broker/core/dto"
 	"broker/core/service"
 	"broker/pkg/httpext"
+	"broker/pkg/logger"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -46,7 +45,7 @@ func (c *Controller) SignUp(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		} else {
-			blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+			logger.Logger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
 			httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -77,7 +76,7 @@ func (c *Controller) SignIn(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, service.PasswordNotMatch) {
 			code = http.StatusBadRequest
 		} else {
-			blogger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+			logger.Logger.Errorf("[user/sign-up] CTX:[%v], ERROR:[%s]", ctx, err.Error())
 			code = http.StatusInternalServerError
 		}
 		httpext.AbortJSON(w, err.Error(), code)
@@ -103,7 +102,7 @@ func (c *Controller) SendVerifyCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := c.authService.SendVerifyCode(ctx, payload.Email); err != nil {
-		blogger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+		logger.Logger.Errorf("[user/verifyCode] CTX:[%v], ERROR:[%s]", ctx, err.Error())
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

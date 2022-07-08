@@ -5,13 +5,12 @@ import (
 	"broker/core/dto"
 	"broker/core/service"
 	"broker/pkg/httpext"
+	"broker/pkg/logger"
 	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -59,7 +58,7 @@ func (c *Controller) SendInvitation(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Errorf("[InvitationController][SendInvitation] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][SendInvitation] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -86,7 +85,7 @@ func (c *Controller) GetInvitations(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Errorf("[InvitationController][GetInvitations] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][GetInvitations] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -117,7 +116,7 @@ func (c *Controller) CancelInvitation(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		blogger.Errorf("[InvitationController][CancelInvitation] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][CancelInvitation] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -153,7 +152,7 @@ func (c *Controller) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		blogger.Errorf("[InvitationController][AcceptInvitation] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][AcceptInvitation] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

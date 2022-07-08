@@ -6,15 +6,14 @@ import (
 	"broker/core/models"
 	"broker/core/repository"
 	"broker/core/service"
+	"broker/pkg/logger"
 	"broker/pkg/mailer"
 	"broker/pkg/scheduler"
+	"broker/pkg/utils"
 	"context"
 	"fmt"
-	"math/rand"
 	"strings"
 	"time"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type InvitationService struct {
@@ -22,7 +21,6 @@ type InvitationService struct {
 	invitationRepository repository.InvitationRepository
 	scheduler            scheduler.Scheduler
 	mailer               mailer.Mailer
-	runes                []rune
 }
 
 func NewInvitationService(
@@ -30,13 +28,10 @@ func NewInvitationService(
 	invitationRepository repository.InvitationRepository,
 	mailer mailer.Mailer,
 ) *InvitationService {
-	runes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-")
-
 	return &InvitationService{
 		workspaceRepository:  workspaceRepository,
 		invitationRepository: invitationRepository,
 		mailer:               mailer,
-		runes:                runes,
 	}
 }
 
@@ -47,11 +42,11 @@ func (s *InvitationService) StartScheduler(ctx context.Context) {
 		err := s.clearExpiredInvitations(duration)
 
 		if err != nil {
-			blogger.Errorf("%s", err)
+			logger.Logger.Errorf("%s", err)
 			return err
 		}
 
-		blogger.Info("Invitations cleared successfully")
+		logger.Logger.Info("Invitations cleared successfully")
 
 		return nil
 	})
@@ -84,7 +79,7 @@ func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.Send
 		return nil, err
 	}
 
-	code := s.generateBigString()
+	code := utils.GenerateBigString(100)
 
 	invitation, err := s.invitationRepository.CreateInvitation(senderID, workspaceID, payload.RecipientEmail, code)
 
@@ -172,16 +167,4 @@ func (s *InvitationService) clearExpiredInvitations(duration time.Duration) erro
 	}
 
 	return nil
-}
-
-func (s *InvitationService) generateBigString() string {
-	rand.Seed(time.Now().UnixNano())
-
-	link := make([]rune, 100)
-
-	for i := range link {
-		link[i] = s.runes[rand.Intn(len(s.runes))]
-	}
-
-	return string(link)
 }

@@ -3,13 +3,12 @@ package amqp
 import (
 	"broker/core/config"
 	"broker/core/dto"
+	"broker/pkg/logger"
 	"broker/pkg/utils"
 	"encoding/json"
 	"fmt"
 
 	"github.com/streadway/amqp"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type SenderQueue struct {
@@ -100,11 +99,11 @@ func (q *SenderQueue) Run(out chan dto.PeerEnvelope) error {
 		var payload dto.PeerEnvelope
 		err := json.Unmarshal(delivery.Body, &payload)
 		if err != nil {
-			blogger.Errorf("[WorkspaceQueue][Queue :%s] failed decode", q.meta.QueueName)
+			logger.Logger.Errorf("[WorkspaceQueue][Queue :%s] failed decode", q.meta.QueueName)
 			delivery.Nack(false, false)
 			continue
 		} else {
-			blogger.Infof("[WorkspaceQueue][Queue :%s] receive message %v", payload)
+			logger.Logger.Infof("[WorkspaceQueue][Queue :%s] receive message %v", payload)
 			delivery.Ack(false)
 			out <- payload
 		}
