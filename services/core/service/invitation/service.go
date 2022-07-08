@@ -87,9 +87,17 @@ func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.Send
 		return nil, err
 	}
 
+	var access string
+
+	if workspace.IsPrivate {
+		access = "private"
+	} else {
+		access = "public"
+	}
+
 	_, _, err = s.mailer.SendMail(ctx,
-		fmt.Sprintf("You have been invited to workspace '%s'. Follow this link to accept invitation: https://localhost:3000/invitations/%s",
-			workspace.Name, code),
+		fmt.Sprintf("You have been invited to %s workspace '%s'. Follow this link to accept invitation:\n https://localhost:3000/invitations/%s",
+			access, workspace.Name, code),
 		"Invitation to workspace", payload.RecipientEmail)
 
 	if err != nil {

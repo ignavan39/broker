@@ -8,7 +8,7 @@ import (
 
 func main() {
 	logger.Init()
-	
+
 	if err := config.Init(); err != nil {
 		logger.Logger.Fatalln(err)
 	}

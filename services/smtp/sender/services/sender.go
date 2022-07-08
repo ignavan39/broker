@@ -79,11 +79,30 @@ func (s *Sender) Send(payload dto.SendMailPayload) error {
 }
 
 func (s *Sender) buildMessage(payload dto.SendMailPayload, sender string) string {
-	msg := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\r\n"
-	msg += fmt.Sprintf("From: %s\r\n", sender)
+	delimiter := "beer=happiness"
+
+	msg := fmt.Sprintf("From: %s\r\n", sender)
 	msg += fmt.Sprintf("To: %s\r\n", payload.Recipient)
 	msg += fmt.Sprintf("Subject: %s\r\n", payload.Subject)
+	msg += fmt.Sprintf("MIME-version: 1.0;\nContent-Type: multipart/mixed; charset=\"UTF-8\"; boundary=%s\r\n", delimiter)
 	msg += fmt.Sprintf("\r\n%s\r\n", payload.Message)
+
+	//message
+	msg += fmt.Sprintf("\r\n--%s\r\n", delimiter)
+	msg += fmt.Sprintf("Content-Type: text/html; charset=\"utf-8\"\r\n")
+	msg += fmt.Sprintf("\r\n%s\r\n", payload.Message)
+
+	//attachments
+	if payload.Attachments != nil {
+		msg += fmt.Sprintf("\r\n--%s\r\n", delimiter)
+		for attachmentName, attachment := range *payload.Attachments {
+			msg += fmt.Sprintf("\r\n--%s\r\n", delimiter)
+			msg += "Content-Type: text/plain; charset=\"utf-8\"\r\n"
+			msg += "Content-Transfer-Encoding: base64\r\n"
+			msg += "Content-Disposition: attachment;filename=\"" + attachmentName + "\"\r\n"
+			msg += "\r\n" + attachment
+		}
+	}
 
 	return msg
 }

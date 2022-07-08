@@ -3,8 +3,8 @@ package config
 import "os"
 
 type Config struct {
-	Email    string `env:"SENDER_GMAIL"`
-	Password string `env:"SENDER_GMAIL_PASSWORD"`
+	Email    string `env:"SENDER_GMAIL" envDefault:"infbrokerinfo@gmail.com"`
+	Password string `env:"SENDER_GMAIL_PASSWORD" envDefault:"pyuvwbfwumkkqrfd"`
 	Host     string
 	Address  string
 }
