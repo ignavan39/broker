@@ -8,11 +8,14 @@ import { Login } from "./pages/auth/Login";
 import { Registration } from "./pages/auth/Registration";
 import { Workspaces } from "./pages/workspace/Workspaces";
 import { errorState } from "./state/Error.state";
-import { userIsLoggined } from "./state/User.state";
+import { userLoggedOn } from "./state/User.state";
+import { Invitation } from "./components/invitation/Invitation";
+import { invitationState } from "./state/Invitation.state"
 
 const BaseRouter = () => {
-  const isLoggined = useRecoilValue(userIsLoggined);
+  const loggedOn = useRecoilValue(userLoggedOn);
   const [err, setErr] = useRecoilState(errorState);
+  const [isInvitation, invState] = useRecoilState(invitationState)
   return (
     <>
       {" "}
@@ -21,17 +24,23 @@ const BaseRouter = () => {
       ) : (
         <></>
       )}
+      {isInvitation ? (
+        <Invitation isInvitation={isInvitation} setOpen={invState}/>
+      ) : (
+        <></>
+      )}
       <BrowserRouter>
         <Routes>
+          <Route path="/invitations/{code}" element={<Invitation />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Registration />} />
           <Route
             path="*"
-            element={isLoggined ? <Home /> : <Navigate to="/" />}
+            element={loggedOn ? <Home /> : <Navigate to="/" />}
           />
           <Route
             path="/"
-            element={isLoggined ? <Workspaces /> : <Navigate to="/login" />}
+            element={loggedOn ? <Workspaces /> : <Navigate to="/login" />}
           />
         </Routes>
       </BrowserRouter>

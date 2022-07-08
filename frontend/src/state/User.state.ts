@@ -38,7 +38,7 @@ export const userState = atom<User>({
   default: getDefaultUser(),
 });
 
-export const userIsLoggined = selector({
+export const userLoggedOn = selector({
   key: "isLoggined",
   get: ({ get }) => {
     const user = get(userState);
