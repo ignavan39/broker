@@ -88,3 +88,5 @@ CREATE TABLE invitations (
     system_status invitation_system_status NOT NULL DEFAULT 'CREATED',
     code text NOT NULL
 );
+
+CREATE UNIQUE INDEX invitation_idx ON invitations(recipient_email, workspace_id)

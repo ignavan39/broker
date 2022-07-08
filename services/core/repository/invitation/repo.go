@@ -1,14 +1,11 @@
 package invitation
 
 import (
-	"broker/core/config"
 	"broker/core/models"
 	"broker/core/service"
 	"broker/pkg/pg"
-	"broker/pkg/utils"
 	"database/sql"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -105,7 +102,7 @@ func (r *Repository) AcceptInvitation(userID string, code string) error {
 	return nil
 }
 
-func (r *Repository) CreateInvitation(senderID string, workspaceID string, recipientEmail string) (*models.Invitation, error) {
+func (r *Repository) CreateInvitation(senderID string, workspaceID string, recipientEmail string, code string) (*models.Invitation, error) {
 	var invitation models.Invitation
 
 	var count int
@@ -140,8 +137,6 @@ func (r *Repository) CreateInvitation(senderID string, workspaceID string, recip
 		}
 		return nil, err
 	}
-
-	code := utils.CryptString(fmt.Sprintf("%s%s", senderID, workspaceID), config.GetConfig().Invitation.InvitationHashSalt)
 
 	row = sq.Insert("invitations").
 		Columns("sender_id", "recipient_email", "workspace_id, code, system_status").

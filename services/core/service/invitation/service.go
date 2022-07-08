@@ -84,16 +84,18 @@ func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.Send
 		return nil, err
 	}
 
-	_, _, err = s.mailer.SendMail(ctx,
-		fmt.Sprintf("You have been invited to workspace '%s'. Follow this link to accept invitation: https://kind-of-link-i-guess.com/invitation/%s",
-			workspace.Name, s.generateBigString()),
-		"Invitation to workspace", payload.RecipientEmail)
+	code := s.generateBigString()
+
+	invitation, err := s.invitationRepository.CreateInvitation(senderID, workspaceID, payload.RecipientEmail, code)
 
 	if err != nil {
 		return nil, err
 	}
 
-	invitation, err := s.invitationRepository.CreateInvitation(senderID, workspaceID, payload.RecipientEmail)
+	_, _, err = s.mailer.SendMail(ctx,
+		fmt.Sprintf("You have been invited to workspace '%s'. Follow this link to accept invitation: https://localhost:3000/invitations/%s",
+			workspace.Name, code),
+		"Invitation to workspace", payload.RecipientEmail)
 
 	if err != nil {
 		return nil, err
