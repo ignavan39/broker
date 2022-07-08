@@ -40,6 +40,10 @@ type MailgunConfig struct {
 	Sender     string `env:"MAILGUN_SENDER"`
 }
 
+type FrontendConfig struct {
+	Host string `env:"FRONTEND_HOST" envDefault:"localhost:3000"`
+}
+
 type InvitationConfig struct {
 	InvitationHashSalt       string        `env:"INVITATION_HASH_SALT" envDefault:"puper_secret"`
 	InvitationExpireDuration time.Duration `env:"INVITATION_EXPIRE_DURATION" envDefault:"5s"`
@@ -51,6 +55,7 @@ type Config struct {
 	MailgunConfig MailgunConfig
 	AMQP          AMQPConfig
 	Redis         RedisConfig
+	Frontend FrontendConfig
 	Invitation    InvitationConfig
 }
 
@@ -130,6 +135,10 @@ func Init() error {
 		DB:       int(redisDB),
 	}
 
+	frontend := FrontendConfig{
+		Host: os.Getenv("FRONTEND_HOST"),
+	}
+
 	invitationExpireDurationRaw := os.Getenv("INVITATION_EXPIRE_DURATION")
 	invitationExpireDuration, err := time.ParseDuration(invitationExpireDurationRaw)
 	if err != nil {
@@ -147,6 +156,7 @@ func Init() error {
 		MailgunConfig: mailgunConfig,
 		AMQP:          amqpConf,
 		Redis:         redis,
+		Frontend: frontend,
 		Invitation:    invitation,
 	}
 	return nil

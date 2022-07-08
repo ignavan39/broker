@@ -96,8 +96,8 @@ func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.Send
 	}
 
 	_, _, err = s.mailer.SendMail(ctx,
-		fmt.Sprintf("You have been invited to %s workspace '%s'. Follow this link to accept invitation:\n https://localhost:3000/invitations/%s",
-			access, workspace.Name, code),
+		fmt.Sprintf("You have been invited to %s workspace '%s'. Follow this link to accept invitation:\n https://%s/invitations/%s",
+			access, workspace.Name, config.GetConfig().Frontend.Host, code),
 		"Invitation to workspace", payload.RecipientEmail)
 
 	if err != nil {
