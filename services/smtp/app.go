@@ -26,7 +26,7 @@ func Start() {
 			chim.RequestID,
 		)
 		router.InitRoutes(v1)
-	})	
+	})
 
 	if err := web.Start(); err != nil {
 		blogger.Fatal(err)
@@ -41,4 +41,3 @@ func Start() {
 	}()
 	web.WaitForDone()
 }
-

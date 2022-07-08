@@ -48,7 +48,7 @@ func (c *Controller) SendInvitation(w http.ResponseWriter, r *http.Request) {
 
 	userID := middleware.GetUserIdFromContext(ctx)
 
-	res, err := c.invitationService.CreateInvitation(payload, userID, workspaceID)
+	res, err := c.invitationService.SendInvitation(ctx, payload, userID, workspaceID)
 
 	if err != nil {
 		if errors.Is(err, service.DuplicateInvitationErr) {

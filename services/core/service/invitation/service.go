@@ -6,8 +6,11 @@ import (
 	"broker/core/models"
 	"broker/core/repository"
 	"broker/core/service"
+	"broker/pkg/mailer"
 	"broker/pkg/scheduler"
 	"context"
+	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -18,15 +21,22 @@ type InvitationService struct {
 	workspaceRepository  repository.WorkspaceRepository
 	invitationRepository repository.InvitationRepository
 	scheduler            scheduler.Scheduler
+	mailer               mailer.Mailer
+	runes                []rune
 }
 
 func NewInvitationService(
 	workspaceRepository repository.WorkspaceRepository,
 	invitationRepository repository.InvitationRepository,
+	mailer mailer.Mailer,
 ) *InvitationService {
+	runes := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-")
+
 	return &InvitationService{
 		workspaceRepository:  workspaceRepository,
 		invitationRepository: invitationRepository,
+		mailer:               mailer,
+		runes:                runes,
 	}
 }
 
@@ -55,7 +65,7 @@ func (s *InvitationService) ReadError() error {
 	return <-s.scheduler.Error()
 }
 
-func (s *InvitationService) CreateInvitation(payload dto.SendInvitationPayload,
+func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.SendInvitationPayload,
 	senderID string,
 	workspaceID string) (*dto.SendInvitationResponse, error) {
 	accessType, err := s.workspaceRepository.GetAccessByUserId(senderID, workspaceID)
@@ -68,7 +78,22 @@ func (s *InvitationService) CreateInvitation(payload dto.SendInvitationPayload,
 		return nil, service.WorkspaceAccessDeniedErr
 	}
 
-	invitation, err := s.invitationRepository.SendInvitation(senderID, workspaceID, payload.RecipientEmail)
+	workspace, err := s.workspaceRepository.GetWorkspaceByUserId(senderID, workspaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, _, err = s.mailer.SendMail(ctx,
+		fmt.Sprintf("You have been invited to workspace '%s'. Follow this link to accept invitation: https://kind-of-link-i-guess.com/invitation/%s",
+			workspace.Name, s.generateBigString()),
+		"Invitation to workspace", payload.RecipientEmail)
+
+	if err != nil {
+		return nil, err
+	}
+
+	invitation, err := s.invitationRepository.CreateInvitation(senderID, workspaceID, payload.RecipientEmail)
 
 	if err != nil {
 		return nil, err
@@ -145,4 +170,16 @@ func (s *InvitationService) clearExpiredInvitations(duration time.Duration) erro
 	}
 
 	return nil
+}
+
+func (s *InvitationService) generateBigString() string {
+	rand.Seed(time.Now().UnixNano())
+
+	link := make([]rune, 100)
+
+	for i := range link {
+		link[i] = s.runes[rand.Intn(len(s.runes))]
+	}
+
+	return string(link)
 }

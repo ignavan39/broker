@@ -122,7 +122,7 @@ func (a *AuthService) SendVerifyCode(ctx context.Context, email string) error {
 		return err
 	}
 
-	_, _, err := a.mailer.SendMail(ctx, fmt.Sprintf("Your verify code :%d", code), "Verify code", email)
+	_, _, err := a.mailer.SendMail(ctx, fmt.Sprintf("Your verify code is %d", code), "Code verification", email)
 	if err != nil {
 		return err
 	}

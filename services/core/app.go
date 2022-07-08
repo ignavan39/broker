@@ -24,7 +24,7 @@ import (
 	"time"
 
 	cache "broker/pkg/cache/redis"
-	mailer "broker/pkg/mailer/mock"
+	mailer "broker/pkg/mailer/smtp"
 	"broker/pkg/pg"
 	"context"
 	"os"
@@ -91,7 +91,7 @@ func NewApp(config config.Config) *App {
 
 	a.web = delivery.NewAPIServer(":80").WithCors()
 
-	mailGun := mailer.NewMockMailer()
+	mailGun := mailer.NewSmtpMailer()
 	userRepo := userRepo.NewRepository(pgConn)
 	invitationRepo := invitationRepo.NewRepository(pgConn)
 	authService := authSrv.NewAuthService([]byte(a.config.JWT.SigningKey), a.config.JWT.AccessExpireDuration, a.config.JWT.RefreshExpireDuration, userRepo, invitationRepo, authCache, mailGun)
@@ -118,7 +118,7 @@ func NewApp(config config.Config) *App {
 	peerController := peer.NewController(peerService)
 	peerRouter := peer.NewRouter(peerController, authGuard)
 
-	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo)
+	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo, mailGun)
 
 	invitationService.StartScheduler(ctx)
 

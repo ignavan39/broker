@@ -3,10 +3,10 @@ package config
 import "os"
 
 type Config struct {
-	Email string 
-	Password string
-	Host string
-	Address string
+	Email    string `env:"SENDER_GMAIL"`
+	Password string `env:"SENDER_GMAIL_PASSWORD"`
+	Host     string
+	Address  string
 }
 
 var config Config
@@ -14,10 +14,10 @@ var config Config
 func Init() {
 
 	config = Config{
-		Email: os.Getenv("USER_GMAIL"),
-		Password: os.Getenv("USER_PASSWORD"),
-		Host: "smtp.gmail.com",
-		Address: "smtp.gmail.com:465",
+		Email:    os.Getenv("SENDER_GMAIL"),
+		Password: os.Getenv("SENDER_PASSWORD_GMAIL"),
+		Host:     "smtp.gmail.com:",
+		Address:  "smtp.gmail.com:465",
 	}
 }
 

@@ -105,7 +105,7 @@ func (r *Repository) AcceptInvitation(userID string, code string) error {
 	return nil
 }
 
-func (r *Repository) SendInvitation(senderID string, workspaceID string, recipientEmail string) (*models.Invitation, error) {
+func (r *Repository) CreateInvitation(senderID string, workspaceID string, recipientEmail string) (*models.Invitation, error) {
 	var invitation models.Invitation
 
 	var count int
