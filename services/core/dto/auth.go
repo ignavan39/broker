@@ -124,3 +124,7 @@ func (p *SignInPayload) Validate() error {
 
 	return nil
 }
+
+type RefreshTokensPayload struct {
+	Token string `json:"token,omitempty"`
+}
