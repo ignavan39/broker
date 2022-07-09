@@ -164,7 +164,7 @@ func (a *AuthService) createToken(id string, duration time.Duration) (*dto.Token
 	}, nil
 }
 
-func (a *AuthService) Refresh (jwtToken string)(*dto.SignResponse, error) {
+func (a *AuthService) Refresh(jwtToken string) (*dto.SignResponse, error) {
 	customClaims := &service.Claims{}
 
 	token, err := jwt.ParseWithClaims(jwtToken, customClaims, func(token *jwt.Token) (interface{}, error) {
@@ -176,12 +176,12 @@ func (a *AuthService) Refresh (jwtToken string)(*dto.SignResponse, error) {
 	}
 
 	if time.Now().Unix() > customClaims.ExpiresAt.Unix() {
-		return nil,errors.New("Token expired")
+		return nil, errors.New("Token expired")
 	}
 
-	user,err := a.userRepository.GetOneById(customClaims.ID)
+	user, err := a.userRepository.GetOneById(customClaims.ID)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	payloadBuilder := dto.NewSignPayloadResponseBuilder().WithUser(*user)
 
@@ -220,9 +220,8 @@ func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 	}
 
 	if time.Now().Unix() > customClaims.ExpiresAt.Unix() {
-		return nil,false
+		return nil, false
 	}
-
 
 	return customClaims, true
 }
@@ -230,4 +229,3 @@ func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 func getUserPrefix() string {
 	return "user"
 }
-

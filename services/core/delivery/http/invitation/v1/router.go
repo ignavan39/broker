@@ -26,6 +26,7 @@ func (rt Router) InitRoutes(r chi.Router) {
 			r.Post("/accept", rt.controller.AcceptInvitation)
 			r.Get("/{workspaceID}", rt.controller.GetInvitations)
 			r.Delete("/cancel/{invitationID}", rt.controller.CancelInvitation)
+			r.Post("/connect", rt.controller.Connect)
 		})
 	})
 }

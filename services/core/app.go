@@ -14,7 +14,9 @@ import (
 	workspaceRepo "broker/core/repository/workspace"
 	authSrv "broker/core/service/auth"
 	invitationSrv "broker/core/service/invitation"
+	invitationPublisher "broker/core/service/invitation/publisher"
 	workspaceSrv "broker/core/service/workspace"
+	connectionSrv "broker/core/service/connection"
 
 	peerSrv "broker/core/service/peer"
 
@@ -117,7 +119,11 @@ func NewApp(config config.Config) *App {
 	peerController := peer.NewController(peerService)
 	peerRouter := peer.NewRouter(peerController, authGuard)
 
-	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo, mailer)
+	connectionService := connectionSrv.NewConnectionService()
+
+	invitationPublisher := invitationPublisher.NewPublisher(amqpConn)
+
+	invitationService := invitationSrv.NewInvitationService(workspaceRepo, invitationRepo, userRepo, connectionService, mailer, invitationPublisher)
 
 	invitationService.StartScheduler(ctx)
 

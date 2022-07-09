@@ -127,7 +127,7 @@ func (c *Controller) Refresh(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, service.PasswordNotMatch) {
 			code = http.StatusBadRequest
 		} else {
-			blogger.Errorf("[user/refresh] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+			logger.Logger.Errorf("[user/refresh] CTX:[%v], ERROR:[%s]", ctx, err.Error())
 			code = http.StatusInternalServerError
 		}
 		httpext.AbortJSON(w, err.Error(), code)

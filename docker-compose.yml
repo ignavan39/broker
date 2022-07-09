@@ -118,6 +118,7 @@ services:
       - postgres
       - redis
       - rabbitmq
+      - broker-smtp
     build:
       context: .
       dockerfile: ./docker/core.dockerfile

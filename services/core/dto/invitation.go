@@ -34,3 +34,7 @@ func (p *AcceptInvitationPayload) Validate() error {
 	}
 	return nil
 }
+
+type ConnectInvitationResponse struct {
+	Consume CreateConnectionBase `json:"consume"`
+}

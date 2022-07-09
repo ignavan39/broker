@@ -159,3 +159,19 @@ func (c *Controller) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 
 	httpext.EmptyResponse(w, http.StatusOK)
 }
+
+func (c *Controller) Connect(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	res, err := c.invitationService.Connect(ctx, userID)
+
+	if err != nil {
+		logger.Logger.Errorf("[InvitationController][Connect] Error: %s", err)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.JSON(w, res, http.StatusOK)
+}

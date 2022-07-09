@@ -7,5 +7,5 @@ import (
 
 type Consumer interface {
 	Consume(handler func(payload dto.PeerEnvelope))
-	CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error)
+	CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateConnectionBase, error)
 }

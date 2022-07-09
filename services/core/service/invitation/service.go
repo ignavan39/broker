@@ -6,6 +6,7 @@ import (
 	"broker/core/models"
 	"broker/core/repository"
 	"broker/core/service"
+	"broker/core/service/invitation/publisher"
 	"broker/pkg/logger"
 	"broker/pkg/mailer"
 	"broker/pkg/scheduler"
@@ -19,26 +20,35 @@ import (
 type InvitationService struct {
 	workspaceRepository  repository.WorkspaceRepository
 	invitationRepository repository.InvitationRepository
-	scheduler            scheduler.Scheduler
+	userRepository       repository.UserRepository
+	connectionService    service.ConnectionService
+	invitationScheduler  scheduler.Scheduler
 	mailer               mailer.Mailer
+	publisher            *publisher.Publisher
 }
 
 func NewInvitationService(
 	workspaceRepository repository.WorkspaceRepository,
 	invitationRepository repository.InvitationRepository,
+	userRepository repository.UserRepository,
+	connectionService service.ConnectionService,
 	mailer mailer.Mailer,
+	publisher *publisher.Publisher,
 ) *InvitationService {
 	return &InvitationService{
 		workspaceRepository:  workspaceRepository,
 		invitationRepository: invitationRepository,
+		userRepository:       userRepository,
+		connectionService:    connectionService,
 		mailer:               mailer,
+		publisher:            publisher,
 	}
 }
 
 func (s *InvitationService) StartScheduler(ctx context.Context) {
 	duration := config.GetConfig().Invitation.InvitationExpireDuration
 
-	scheduler := scheduler.NewScheduler(duration, func(ctx context.Context) error {
+	invitationScheduler := scheduler.NewScheduler(duration, func(ctx context.Context) error {
 		err := s.clearExpiredInvitations(duration)
 
 		if err != nil {
@@ -51,13 +61,23 @@ func (s *InvitationService) StartScheduler(ctx context.Context) {
 		return nil
 	})
 
-	go scheduler.Start(ctx)
+	go invitationScheduler.Start(ctx)
 
-	s.scheduler = *scheduler
+	s.invitationScheduler = *invitationScheduler
+
+	deleteExpiredQueuesScheduler := scheduler.NewScheduler(time.Duration(time.Second * 5), func(ctx context.Context) error {
+		for _, queue := range s.publisher.GetExpiredQueues() {
+			s.publisher.DeleteQueue(queue)
+		}
+
+		return nil
+	})
+
+	go deleteExpiredQueuesScheduler.Start(ctx)
 }
 
 func (s *InvitationService) ReadError() error {
-	return <-s.scheduler.Error()
+	return <-s.invitationScheduler.Error()
 }
 
 func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.SendInvitationPayload,
@@ -102,6 +122,14 @@ func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.Send
 
 	if err != nil {
 		return nil, err
+	}
+
+	recipient, err := s.userRepository.GetOneByEmail(payload.RecipientEmail)
+
+	if err == nil {
+		if err := s.publisher.Publish(recipient.ID, *invitation); err != nil {
+			return nil, err
+		}
 	}
 
 	return &dto.SendInvitationResponse{
@@ -175,4 +203,18 @@ func (s *InvitationService) clearExpiredInvitations(duration time.Duration) erro
 	}
 
 	return nil
+}
+
+func (s *InvitationService) Connect(ctx context.Context, userID string) (*dto.ConnectInvitationResponse, error) {
+	queue, err := s.publisher.CreateConnection(ctx, userID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ch := make(chan int)
+
+	s.connectionService.Add(userID, ch)
+
+	return queue, nil
 }

@@ -66,7 +66,7 @@ func (c *Consumer) Init() error {
 	return nil
 }
 
-func (c *Consumer) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error) {
+func (c *Consumer) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateConnectionBase, error) {
 	c.senderDispatchersLock.Lock()
 	defer c.senderDispatchersLock.Unlock()
 
@@ -81,7 +81,7 @@ func (c *Consumer) CreateConnection(ctx context.Context, senderID string, payloa
 	}
 
 	config := config.GetConfig().AMQP
-	return &dto.CreateWorkspaceConnectionBase{
+	return &dto.CreateConnectionBase{
 		Host:     config.Host,
 		Port:     config.Port,
 		User:     config.ExternalUser,

@@ -22,7 +22,7 @@ func NewPublisher(connection *amqp.Connection) *Publisher {
 	}
 }
 
-func (p *Publisher) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateWorkspaceConnectionBase, error) {
+func (p *Publisher) CreateConnection(ctx context.Context, senderID string, payload dto.CreateWorkspaceConnectionPayload) (*dto.CreateConnectionBase, error) {
 	p.receiveDispatchersLock.Lock()
 	defer p.receiveDispatchersLock.Unlock()
 
@@ -37,7 +37,7 @@ func (p *Publisher) CreateConnection(ctx context.Context, senderID string, paylo
 	}
 
 	config := config.GetConfig().AMQP
-	return &dto.CreateWorkspaceConnectionBase{
+	return &dto.CreateConnectionBase{
 		Host:     config.Host,
 		Port:     config.Port,
 		User:     config.ExternalUser,

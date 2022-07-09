@@ -55,7 +55,7 @@ type Config struct {
 	MailgunConfig MailgunConfig
 	AMQP          AMQPConfig
 	Redis         RedisConfig
-	Frontend FrontendConfig
+	Frontend      FrontendConfig
 	Invitation    InvitationConfig
 }
 
@@ -156,7 +156,7 @@ func Init() error {
 		MailgunConfig: mailgunConfig,
 		AMQP:          amqpConf,
 		Redis:         redis,
-		Frontend: frontend,
+		Frontend:      frontend,
 		Invitation:    invitation,
 	}
 	return nil
