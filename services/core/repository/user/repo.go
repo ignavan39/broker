@@ -98,3 +98,22 @@ func (r *Repository) GetEmailById(userId string) (string, error) {
 
 	return email, nil
 }
+
+func (r *Repository) GetOneById(id string) (*models.User, error) {
+	var user models.User
+
+	row := sq.Select("id", "password", "email", "first_name", "last_name", "avatar_url", "nickname").
+		From("users").
+		Where(sq.Eq{"id": id}).
+		RunWith(r.pool.Read()).
+		PlaceholderFormat(sq.Dollar).
+		QueryRow()
+	if err := row.Scan(&user.ID, &user.Password, &user.Email, &user.FirstName, &user.LastName, &user.AvatarURL, &user.Nickname); err != nil {
+		if errors.Is(sql.ErrNoRows, err) {
+			return nil, service.UserNotFoundErr
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}

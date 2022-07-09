@@ -10,6 +10,7 @@ import (
 	"broker/pkg/mailer"
 	"broker/pkg/utils"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -163,6 +164,45 @@ func (a *AuthService) createToken(id string, duration time.Duration) (*dto.Token
 	}, nil
 }
 
+func (a *AuthService) Refresh (jwtToken string)(*dto.SignResponse, error) {
+	customClaims := &service.Claims{}
+
+	token, err := jwt.ParseWithClaims(jwtToken, customClaims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(a.signingKey), nil
+	})
+
+	if err != nil || !token.Valid {
+		return nil, errors.New("Token malfored")
+	}
+
+	if time.Now().Unix() > customClaims.ExpiresAt.Unix() {
+		return nil,errors.New("Token expired")
+	}
+
+	user,err := a.userRepository.GetOneById(customClaims.ID)
+	if err != nil {
+		return nil,err
+	}
+	payloadBuilder := dto.NewSignPayloadResponseBuilder().WithUser(*user)
+
+	accessToken, err := a.createToken(user.ID, a.accessExpireDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	payloadBuilder.WithAccessToken(*accessToken)
+
+	refreshToken, err := a.createToken(user.ID, a.refreshExpireDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	payloadBuilder.WithRefreshToken(*refreshToken)
+
+	res := payloadBuilder.Exec()
+	return &res, err
+}
+
 func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 	customClaims := &service.Claims{}
 
@@ -179,9 +219,15 @@ func (a *AuthService) Validate(jwtToken string) (*service.Claims, bool) {
 		return customClaims, false
 	}
 
+	if time.Now().Unix() > customClaims.ExpiresAt.Unix() {
+		return nil,false
+	}
+
+
 	return customClaims, true
 }
 
 func getUserPrefix() string {
 	return "user"
 }
+

@@ -109,3 +109,30 @@ func (c *Controller) SendVerifyCode(w http.ResponseWriter, r *http.Request) {
 
 	httpext.EmptyResponse(w, http.StatusOK)
 }
+
+func (c *Controller) Refresh(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var payload dto.RefreshTokensPayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, fmt.Sprintf("failed decode payload %s", err.Error()), http.StatusBadRequest)
+		return
+	}
+	res, err := c.authService.Refresh(payload.Token)
+	if err != nil {
+		var code int
+		if errors.Is(err, service.UserNotFoundErr) {
+			code = http.StatusNotFound
+		} else if errors.Is(err, service.PasswordNotMatch) {
+			code = http.StatusBadRequest
+		} else {
+			blogger.Errorf("[user/refresh] CTX:[%v], ERROR:[%s]", ctx, err.Error())
+			code = http.StatusInternalServerError
+		}
+		httpext.AbortJSON(w, err.Error(), code)
+		return
+	}
+
+	httpext.JSON(w, res, http.StatusOK)
+}
