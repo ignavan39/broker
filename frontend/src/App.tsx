@@ -24,14 +24,9 @@ const BaseRouter = () => {
       ) : (
         <></>
       )}
-      {isInvitation ? (
-        <Invitation isInvitation={isInvitation} setOpen={invState}/>
-      ) : (
-        <></>
-      )}
       <BrowserRouter>
         <Routes>
-          <Route path="/invitations/{code}" element={<Invitation />} />
+          <Route path="/invitations/*" element={<Invitation />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Registration />} />
           <Route
