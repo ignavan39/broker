@@ -82,14 +82,11 @@ func (p *Publisher) DeleteQueue(invitationQueue *InvitationQueue) {
 	}
 }
 
-func (p *Publisher) GetExpiredQueues() []*InvitationQueue{
+func (p *Publisher) GetExpiredQueues(expireTime time.Time) []*InvitationQueue {
 	queues := make([]*InvitationQueue, 0)
 
-	now := time.Now()
-	expireDuration := time.Duration(5 * time.Second).Seconds()
-
 	for _, queue := range p.connections {
-		if now.Sub(queue.LastModified()).Seconds() > expireDuration {
+		if expireTime.Add(time.Duration(-30) * time.Second).After(queue.LastModified()) {
 			queues = append(queues, queue)
 		}
 	}

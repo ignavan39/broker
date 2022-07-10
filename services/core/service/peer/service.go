@@ -8,13 +8,13 @@ import (
 )
 
 type PeerService struct {
-	consumer  consumer.Consumer
-	publisher publisher.Publisher
+	consumer  *consumer.Consumer
+	publisher *publisher.Publisher
 }
 
 func NewPeerService(
-	consumer consumer.Consumer,
-	publisher publisher.Publisher,
+	consumer *consumer.Consumer,
+	publisher *publisher.Publisher,
 ) *PeerService {
 	return &PeerService{
 		consumer:  consumer,

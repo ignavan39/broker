@@ -20,8 +20,8 @@ import (
 
 	peerSrv "broker/core/service/peer"
 
-	peerConsumerAmqp "broker/core/service/peer/consumer/amqp"
-	peerPublisherAmqp "broker/core/service/peer/publisher/amqp"
+	peerConsumerAmqp "broker/core/service/peer/consumer"
+	peerPublisherAmqp "broker/core/service/peer/publisher"
 	"fmt"
 	"time"
 

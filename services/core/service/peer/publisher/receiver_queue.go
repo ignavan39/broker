@@ -1,4 +1,4 @@
-package amqp
+package publisher
 
 import (
 	"broker/core/config"

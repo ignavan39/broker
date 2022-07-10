@@ -1,4 +1,4 @@
-package amqp
+package consumer
 
 import (
 	"broker/core/dto"

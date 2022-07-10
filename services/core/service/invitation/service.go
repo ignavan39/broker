@@ -22,9 +22,9 @@ type InvitationService struct {
 	invitationRepository repository.InvitationRepository
 	userRepository       repository.UserRepository
 	connectionService    service.ConnectionService
-	invitationScheduler  scheduler.Scheduler
 	mailer               mailer.Mailer
 	publisher            *publisher.Publisher
+	schedulerErrors      chan error
 }
 
 func NewInvitationService(
@@ -42,6 +42,7 @@ func NewInvitationService(
 		connectionService:    connectionService,
 		mailer:               mailer,
 		publisher:            publisher,
+		schedulerErrors:      make(chan error),
 	}
 }
 
@@ -62,11 +63,13 @@ func (s *InvitationService) StartScheduler(ctx context.Context) {
 	})
 
 	go invitationScheduler.Start(ctx)
+	go func (){
+		err := <-invitationScheduler.Error()
+		s.schedulerErrors <- err
+	}()
 
-	s.invitationScheduler = *invitationScheduler
-
-	deleteExpiredQueuesScheduler := scheduler.NewScheduler(time.Duration(time.Second * 5), func(ctx context.Context) error {
-		for _, queue := range s.publisher.GetExpiredQueues() {
+	deleteExpiredQueuesScheduler := scheduler.NewScheduler(time.Duration(time.Second*5), func(ctx context.Context) error {
+		for _, queue := range s.publisher.GetExpiredQueues(time.Now()) {
 			s.publisher.DeleteQueue(queue)
 		}
 
@@ -74,10 +77,14 @@ func (s *InvitationService) StartScheduler(ctx context.Context) {
 	})
 
 	go deleteExpiredQueuesScheduler.Start(ctx)
+	go func (){
+		err := <-deleteExpiredQueuesScheduler.Error()
+		s.schedulerErrors <- err
+	}()
 }
 
 func (s *InvitationService) ReadError() error {
-	return <-s.invitationScheduler.Error()
+	return <-s.schedulerErrors
 }
 
 func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.SendInvitationPayload,
