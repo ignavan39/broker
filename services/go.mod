@@ -6,6 +6,7 @@ require github.com/go-chi/chi v1.5.4
 
 require (
 	github.com/antonfisher/nested-logrus-formatter v1.3.1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816 // indirect
 )
 

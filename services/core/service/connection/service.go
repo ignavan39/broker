@@ -1,27 +1,32 @@
 package connection
 
-import "sync"
+import (
+	"sync"
+)
 
 type ConnectionService struct {
-	sustainableConnections map[string][]chan int  
-	connectionLock sync.Mutex
+	sustainableConnections map[string]map[string]chan int
+	connectionLock         sync.Mutex
 }
 
 func NewConnectionService() *ConnectionService {
 	return &ConnectionService{
-		sustainableConnections: make(map[string][]chan int),
+		sustainableConnections: make(map[string]map[string]chan int),
 	}
 }
 
-func (c *ConnectionService) Add(userID string, conn chan int) {
+func (c *ConnectionService) Add(userID string, key string, conn chan int) {
 	c.connectionLock.Lock()
 	defer c.connectionLock.Unlock()
 
-	if _, ok := c.sustainableConnections[userID]; !ok {
-		c.sustainableConnections[userID] = make([]chan int, 0)
+	sc, ok := c.sustainableConnections[userID]
+	if !ok {
+		sc = make(map[string]chan int, 0)
+		sc[key] = conn
+		c.sustainableConnections[userID] = sc
+	} else {
+		c.sustainableConnections[userID][key] = conn
 	}
-
-	c.sustainableConnections[userID] = append(c.sustainableConnections[userID], conn)
 }
 
 func (c *ConnectionService) Ping(userID string) {
@@ -33,6 +38,24 @@ func (c *ConnectionService) Ping(userID string) {
 	if ok {
 		for _, conn := range conns {
 			conn <- 1
+		}
+	}
+}
+
+func (c *ConnectionService) Remove(key string) {
+	c.connectionLock.Lock()
+	defer c.connectionLock.Unlock()
+
+	for userID, conns := range c.sustainableConnections {
+		v, ok := conns[key]
+		if ok {
+			close(v)
+			delete(conns, key)
+			if len(conns) == 0 {
+				delete(c.sustainableConnections, userID)
+			} else {
+				c.sustainableConnections[userID] = conns
+			}
 		}
 	}
 }

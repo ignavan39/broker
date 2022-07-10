@@ -14,7 +14,7 @@ type Router struct {
 func NewRouter(authGuard *middleware.AuthGuard, controller *Controller) *Router {
 	return &Router{
 		controller: controller,
-		authGuard: authGuard,
+		authGuard:  authGuard,
 	}
 }
 

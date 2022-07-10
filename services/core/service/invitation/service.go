@@ -63,23 +63,26 @@ func (s *InvitationService) StartScheduler(ctx context.Context) {
 	})
 
 	go invitationScheduler.Start(ctx)
-	go func (){
+	go func() {
 		err := <-invitationScheduler.Error()
 		s.schedulerErrors <- err
 	}()
 
 	deleteExpiredQueuesScheduler := scheduler.NewScheduler(time.Duration(time.Second*5), func(ctx context.Context) error {
-		for _, queue := range s.publisher.GetExpiredQueues(time.Now()) {
-			s.publisher.DeleteQueue(queue)
+		keys, err := s.publisher.RemoveDeadQueues(time.Now())
+		if err != nil {
+			return err
 		}
-
+		for _, key := range keys {
+			s.connectionService.Remove(key)
+		}
 		return nil
 	})
 
 	go deleteExpiredQueuesScheduler.Start(ctx)
-	go func (){
+	go func() {
 		err := <-deleteExpiredQueuesScheduler.Error()
-		s.schedulerErrors <- err
+		logger.Logger.Error("[InvitationPublisher] error %s", err)
 	}()
 }
 
@@ -220,8 +223,16 @@ func (s *InvitationService) Connect(ctx context.Context, userID string) (*dto.Co
 	}
 
 	ch := make(chan int)
+	s.connectionService.Add(userID, queue.Consume.QueueName, ch)
 
-	s.connectionService.Add(userID, ch)
+	go func() {
+		_, ok := <-ch
+		if ok {
+			s.publisher.SetLastUpdateTimeByUserId(userID, time.Now())
+		} else {
+			return
+		}
+	}()
 
 	return queue, nil
 }

@@ -13,10 +13,10 @@ import (
 )
 
 type InvitationQueue struct {
-	userID  string
-	meta    dto.Meta
-	queue   amqp.Queue
-	channel *amqp.Channel
+	userID       string
+	meta         dto.Meta
+	queue        amqp.Queue
+	channel      *amqp.Channel
 	lastModified time.Time
 }
 
@@ -104,7 +104,7 @@ func (q *InvitationQueue) Remove() error {
 
 	return nil
 }
- 
+
 func getExchangePrefix() string {
 	return "invitation"
 }
@@ -121,6 +121,6 @@ func (q *InvitationQueue) ExchangeName() string {
 	return q.meta.ExchangeName
 }
 
-func (q *InvitationQueue) LastModified() time.Time { 
+func (q *InvitationQueue) LastModified() time.Time {
 	return q.lastModified
 }

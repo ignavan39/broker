@@ -15,13 +15,21 @@ type Publisher struct {
 	connection      *amqp.Connection
 	connections     map[string]*InvitationQueue
 	connectionsLock sync.RWMutex
+	err             chan error
+	ping            chan int
 }
 
 func NewPublisher(connection *amqp.Connection) *Publisher {
 	return &Publisher{
 		connection:  connection,
 		connections: make(map[string]*InvitationQueue),
+		err:         make(chan error),
+		ping:        make(chan int),
 	}
+}
+
+func (p *Publisher) Ping() chan int {
+	return p.ping
 }
 
 func (p *Publisher) CreateConnection(ctx context.Context, userID string) (*dto.ConnectInvitationResponse, error) {
@@ -52,6 +60,18 @@ func (p *Publisher) CreateConnection(ctx context.Context, userID string) (*dto.C
 	}, nil
 }
 
+func (p *Publisher) SetLastUpdateTimeByUserId(userID string, time time.Time) {
+	p.connectionsLock.Lock()
+	defer p.connectionsLock.Unlock()
+
+	queue, ok := p.connections[userID]
+	if !ok {
+		return
+	}
+
+	queue.lastModified = time
+}
+
 func (p *Publisher) Publish(userID string, invitation models.Invitation) error {
 	p.connectionsLock.Lock()
 	defer p.connectionsLock.Unlock()
@@ -71,25 +91,17 @@ func (p *Publisher) Publish(userID string, invitation models.Invitation) error {
 	return nil
 }
 
-func (p *Publisher) DeleteQueue(invitationQueue *InvitationQueue) {
-	p.connectionsLock.Lock()
-	defer p.connectionsLock.Unlock()
-
-	for userID, queue := range p.connections {
-		if queue == invitationQueue {
-			delete(p.connections, userID)
-		}
-	}
-}
-
-func (p *Publisher) GetExpiredQueues(expireTime time.Time) []*InvitationQueue {
-	queues := make([]*InvitationQueue, 0)
-
-	for _, queue := range p.connections {
+func (p *Publisher) RemoveDeadQueues(expireTime time.Time) ([]string, error) {
+	queueNames := make([]string, 0)
+	for id, queue := range p.connections {
 		if expireTime.Add(time.Duration(-30) * time.Second).After(queue.LastModified()) {
-			queues = append(queues, queue)
+			if err := queue.Remove(); err != nil {
+				return nil, err
+			}
+			queueNames = append(queueNames, queue.Name())
+			delete(p.connections, id)
 		}
 	}
 
-	return queues
+	return queueNames, nil
 }
