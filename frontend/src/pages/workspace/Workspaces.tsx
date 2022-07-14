@@ -83,9 +83,8 @@ export const Workspaces = () => {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      console.log(state);
       let response = await workspaceService.create(state.name, state.isPrivate);
-      workspaces.push(response);
+      setWorkspaces([...workspaces, response].sort((p,n)=> p.createdAt < n.createdAt ? 1 : 0));
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
       setErr(message);
@@ -102,7 +101,8 @@ export const Workspaces = () => {
         setErr(message);
       }
     })();
-  }, []);
+  }, [setErr]);
+
   return (
     <>
       <Navbar />

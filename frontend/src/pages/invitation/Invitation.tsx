@@ -36,5 +36,5 @@ const FormButton = styled.div`
 `;
 
 export const Invitation = () => {
-    const invitation, 
+  return <Container></Container>
 }

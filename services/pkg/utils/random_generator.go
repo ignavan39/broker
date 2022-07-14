@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var runes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-")
+var runes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 func GenerateRandomNumber(low int, high int) int {
 	src := rand.NewSource(time.Now().UnixNano())

@@ -11,6 +11,7 @@ import { errorState } from "./state/Error.state";
 import { userLoggedOn } from "./state/User.state";
 import { Invitation } from "./components/invitation/Invitation";
 import { invitationState } from "./state/Invitation.state"
+import { Verification } from "./pages/auth/Verification";
 
 const BaseRouter = () => {
   const loggedOn = useRecoilValue(userLoggedOn);
@@ -26,9 +27,11 @@ const BaseRouter = () => {
       )}
       <BrowserRouter>
         <Routes>
+          <Route path="/workspaces" element={<Workspaces />} />
           <Route path="/invitations/*" element={<Invitation />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Registration />} />
+          <Route path="/verification" element={<Verification />} />
           <Route
             path="*"
             element={loggedOn ? <Home /> : <Navigate to="/" />}

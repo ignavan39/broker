@@ -116,7 +116,7 @@ export const Login = () => {
           };
           setUser(updatedUser);
           localStorage.setItem("user", JSON.stringify(updatedUser));
-          navigate("/");
+          navigate("/workspaces");
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : "unknown error";
@@ -141,7 +141,7 @@ export const Login = () => {
       };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(apiResponse));
-      navigate("/");
+      navigate("/workspaces");
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
       setErr(message);

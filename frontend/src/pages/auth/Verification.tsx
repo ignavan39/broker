@@ -1,4 +1,12 @@
+import { useNavigate } from "react-router";
+import { userState } from "../../state/User.state";
 import styled from "styled-components";
+import { useRecoilState } from "recoil";
+import { errorState } from "../../state/Error.state";
+import { useState } from "react";
+import { User } from "../../types/User";
+import { authorizationService } from "../../api";
+import axios, { AxiosError } from "axios";
 
 const Container = styled.div`
   display: flex;
@@ -74,3 +82,75 @@ const FormButton = styled.div`
   min-width: 100%;
   margin: 0.2rem 0;
 `
+
+export const Verification = () => {
+  const [err, setErr] = useRecoilState(errorState);
+  const [user, setUser] = useRecoilState(userState);
+  const [state, setState] = useState<{
+    code: string;
+  }>({
+    code: "",
+  });
+  const navigate = useNavigate();
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      if (!state.code) {
+        throw new Error("Invalid Invitation Code");
+      }
+
+      const apiResponse = await authorizationService.signUp({
+        password: user.user.password,
+        email: user.user.email,
+        code: Number.parseInt(state.code),
+        lastName: user.user.lastName,
+        firstName: user.user.firstName,
+        nickname: user.user.nickname,
+      });
+      const updatedUser: User = {
+        ...apiResponse,
+        user: {
+          ...apiResponse.user,
+          password: user.user.password,
+        },
+      };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(apiResponse));
+
+      navigate("/workspaces");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "unknown error";
+      setErr(message);
+    }
+  }
+
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setState({
+      ...state,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  return (
+    <Container>
+      <Form onSubmit={onSubmit}>
+        <Header>Code verification</Header>
+        <FormInput>
+          <Input
+            type={"code"}
+            placeholder="code"
+            onInput={handleInput}
+            value={state.code}
+            name="code"
+          />
+        </FormInput>
+        <FormButton>
+          <Button>Submit</Button>
+        </FormButton>
+      </Form>
+    </Container>
+  )
+}
+

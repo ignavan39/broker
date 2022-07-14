@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { SetterOrUpdater } from "recoil";
 import styled from "styled-components";
 
@@ -21,7 +22,7 @@ const Button = styled.button`
 
 const ErrorContainer = styled.div`
   height: 10rem;
-  width: 30rem;
+  width: 15rem;
   border-radius: 15px;
   display: flex;
   font-size: 1rem;
@@ -30,7 +31,7 @@ const ErrorContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   background-color: white;
-  top: 20px;
+  bottom: 20px;
   right: 42rem;
   z-index: 10;
   position: absolute;
@@ -45,7 +46,7 @@ const ErrorContainer = styled.div`
       transform: translateX(60rem);
     }
     to {
-      transform: translateX(-3rem);
+      transform: translateX(40rem);
     }
   }
 `;
@@ -57,6 +58,14 @@ export const ErrorPopup = ({
   err: string;
   setOpen: SetterOrUpdater<string | null>;
 }) => {
+
+
+  useEffect(() => {
+    setTimeout(() => {
+      setOpen(null)
+    }, 3000)
+  })
+
   return (
     <ErrorContainer>
       <div style={{ margin: "2rem" }}>{err}</div>
