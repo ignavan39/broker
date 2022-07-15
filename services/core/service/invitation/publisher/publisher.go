@@ -105,3 +105,14 @@ func (p *Publisher) RemoveDeadQueues(expireTime time.Time) ([]string, error) {
 
 	return queueNames, nil
 }
+
+func (p *Publisher) GetQueueByUser(userID string) (*InvitationQueue) {
+	queue, ok := p.connections[userID]
+
+	if !ok {
+		return nil
+	}
+
+	return queue
+}
+ 

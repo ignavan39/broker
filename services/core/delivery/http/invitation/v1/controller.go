@@ -175,3 +175,34 @@ func (c *Controller) Connect(w http.ResponseWriter, r *http.Request) {
 
 	httpext.JSON(w, res, http.StatusOK)
 }
+
+func (c *Controller) RejectInvitation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var payload dto.RejectInvitationPayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := payload.Validate(); err != nil {
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	err := c.invitationService.RejectInvitation(payload, userID)
+
+	if err != nil {
+		if errors.Is(err, service.InvitationNotFoundErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		logger.Logger.Errorf("[InvitationController][RejectInvitation] Error: %s", err)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.EmptyResponse(w, http.StatusOK)
+}

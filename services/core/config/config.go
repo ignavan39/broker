@@ -29,6 +29,8 @@ type AMQPConfig struct {
 	Pass             string `env:"AMQP_PASS" envDefault:"pass"`
 	ExternalUser     string `env:"AMQP_EXTERNAL_USER" envDefault:"user"`
 	ExternalPassword string `env:"AMQP_EXTERNAL_PASS" envDefault:"pass"`
+	ExternalHost string `env:"AMQP_EXTERNAL_HOST" envDefault:"localhost"`
+	ExternalPort int `env:"AMQP_EXTERNAL_PORT" envDefault:"15675"`
 	Vhost            string `env:"AMQP_VHOST" envDefault:"/"`
 	QueueHashSalt    string `env:"QUEUE_HASH_SALT" envDefault:"super_secret"`
 }
@@ -76,9 +78,11 @@ func Init() error {
 	}
 
 	amqpPort, err := strconv.ParseInt(os.Getenv("AMQP_PORT"), 10, 16)
+
 	if err != nil {
 		return fmt.Errorf("error for parsing AMQP_PORT :%s", err)
 	}
+
 	amqpConf := AMQPConfig{
 		Port:             int(amqpPort),
 		Host:             os.Getenv("AMQP_HOST"),

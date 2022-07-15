@@ -89,4 +89,4 @@ CREATE TABLE invitations (
     code text NOT NULL
 );
 
-CREATE UNIQUE INDEX invitation_idx ON invitations(recipient_email, workspace_id)
+CREATE UNIQUE INDEX invitation_idx ON invitations(recipient_email, workspace_id, "status")

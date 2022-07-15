@@ -1,7 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useRecoilState } from "recoil";
 import styled from "styled-components";
+import { connectionService } from "../../api/Connection";
 import { invitationService } from "../../api/Invitation";
+import { errorState } from "../../state/Error.state";
+import { userState } from "../../state/User.state";
 
 const Container = styled.div`
   display: flex;
@@ -12,17 +16,95 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  font-size: 2rem;
+  color: white;
+  height: 4rem;
+  border-radius: 10px 10px 0 0;
+  background-color: #4caf50;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  width: 23rem;
+  justify-content: space-between;
+  min-height: 400px;
+  border-radius: 10px;
+  border: 1px solid #4caf50;
+`;
+
+const FormButton = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  min-width: 100%;
+  margin: 0.2rem 0;
+`;
+
+const Button = styled.button`
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  padding: 1rem 2rem;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  min-width: 9rem;
+  margin: 0.2rem 1rem;
+  min-height: 1rem;
+  border-radius: 10px;
+  &:hover {
+    background-color: #4aaf90;
+  }
+`;
+
 export const Invitation = () => {
+  const [err, setErr] = useRecoilState(errorState);
+
   const navigate = useNavigate();
+
+  const splits = window.location.href.split("/");
+  const code = splits[splits.length - 1];
+
   useEffect(() => {
     (async () => {
       try {
-        const splits = window.location.href.split("/");
-        const code = splits[splits.length - 1];
-        await invitationService.accept(code);
-        navigate("/");
-      } catch (err) {}
+        const response = await connectionService.connect();
+        console.log(response);
+        connectionService.getData(code, response.host, response.port, response.queueName);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "unknown error";
+        setErr(message);
+      }
     })();
-  }, []);
-  return <Container></Container>;
+  }, [setErr]);
+
+  const invitationText = "You have been invited to " + code;
+
+  return (
+    <Container>
+      <Form>
+        <Header>Invitation</Header>
+        <div style={{ margin: "2rem" }}>{invitationText}</div>
+        <FormButton>
+          <Button onClick = {() => {
+            invitationService.accept(code)
+          }}>
+            Accept
+          </Button>
+          <Button onClick = {() => {
+            invitationService.reject(code)
+          }}>
+            Reject
+          </Button>
+        </FormButton>
+      </Form>
+    </Container>
+  )
 };

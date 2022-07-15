@@ -12,6 +12,8 @@
     "@types/react-dom": "^18.0.5",
     "axios": "^0.27.2",
     "cross-env": "^7.0.3",
+    "mqtt": "^4.3.7",
+    "nvm": "^0.0.4",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-router": "^6.3.0",
@@ -48,5 +50,8 @@
   },
   "devDependencies": {
     "@types/styled-components": "^5.1.25"
+  },
+  "engines": {
+    "node": ">=17.0.0"
   }
 }

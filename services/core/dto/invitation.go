@@ -35,6 +35,19 @@ func (p *AcceptInvitationPayload) Validate() error {
 	return nil
 }
 
+type RejectInvitationPayload struct {
+	Code string `json:"code"`
+}
+
+func (p *RejectInvitationPayload) Validate() error {
+	if len(p.Code) == 0 {
+		return errors.New("code must be not empty string")
+	}
+	return nil
+}
+
 type ConnectInvitationResponse struct {
 	Consume CreateConnectionBase `json:"consume"`
 }
+
+type GetInvitationFromQueueResponse = models.Invitation

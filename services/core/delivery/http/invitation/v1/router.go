@@ -24,6 +24,7 @@ func (rt Router) InitRoutes(r chi.Router) {
 			r.Use(rt.authGuard.Next())
 			r.Post("/create/{workspaceID}", rt.controller.SendInvitation)
 			r.Post("/accept", rt.controller.AcceptInvitation)
+			r.Post("/reject", rt.controller.RejectInvitation)
 			r.Get("/{workspaceID}", rt.controller.GetInvitations)
 			r.Delete("/cancel/{invitationID}", rt.controller.CancelInvitation)
 			r.Post("/connect", rt.controller.Connect)
