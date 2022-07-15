@@ -1,8 +1,24 @@
+import { WorkspaceListItem } from "./Workspace"
+
+export enum InvitationStatus {
+    PENDING,
+    ACCEPTED,
+    CANCELED,
+    EXPIRED
+}
+
+export enum SystemStatus {
+    CREATED,
+    SEND,
+    DELIVERED,
+    REJECT
+}
+
 export type Invitation = {
     id: string,
-    workspaceId: string,
+    workspace: WorkspaceListItem
     senderId: string,
-    status: string, 
-    systemStatus: string,
+    status: InvitationStatus, 
+    systemStatus: SystemStatus,
     createdAt: string,
 }

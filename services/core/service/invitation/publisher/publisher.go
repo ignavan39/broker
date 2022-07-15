@@ -13,7 +13,7 @@ import (
 
 type Publisher struct {
 	connection      *amqp.Connection
-	connections     map[string]*InvitationQueue
+	connections     map[string]map[string]*InvitationQueue
 	connectionsLock sync.RWMutex
 	err             chan error
 	ping            chan int
@@ -22,7 +22,7 @@ type Publisher struct {
 func NewPublisher(connection *amqp.Connection) *Publisher {
 	return &Publisher{
 		connection:  connection,
-		connections: make(map[string]*InvitationQueue),
+		connections: make(map[string]map[string]*InvitationQueue),
 		err:         make(chan error),
 		ping:        make(chan int),
 	}
@@ -42,7 +42,14 @@ func (p *Publisher) CreateConnection(ctx context.Context, userID string) (*dto.C
 		return nil, err
 	}
 
-	p.connections[userID] = queue
+	_, ok := p.connections[userID]
+
+	if !ok {
+		qs := make(map[string]*InvitationQueue)
+		p.connections[userID] = qs
+	}
+
+	p.connections[userID][queue.meta.QueueName] = queue
 
 	config := config.GetConfig().AMQP
 	return &dto.ConnectInvitationResponse{
@@ -64,28 +71,32 @@ func (p *Publisher) SetLastUpdateTimeByUserId(userID string, time time.Time) {
 	p.connectionsLock.Lock()
 	defer p.connectionsLock.Unlock()
 
-	queue, ok := p.connections[userID]
+	queues, ok := p.connections[userID]
 	if !ok {
 		return
 	}
 
-	queue.lastModified = time
+	for _, queue := range queues {
+		queues[queue.meta.QueueName].lastModified = time
+	}
 }
 
 func (p *Publisher) Publish(userID string, invitation models.Invitation) error {
 	p.connectionsLock.Lock()
 	defer p.connectionsLock.Unlock()
 
-	queue, ok := p.connections[userID]
+	queues, ok := p.connections[userID]
 
 	if !ok {
 		return nil
 	}
 
-	err := queue.Publish(invitation)
+	for _, queue := range queues {
+		err := queues[queue.meta.QueueName].Publish(invitation)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -93,26 +104,27 @@ func (p *Publisher) Publish(userID string, invitation models.Invitation) error {
 
 func (p *Publisher) RemoveDeadQueues(expireTime time.Time) ([]string, error) {
 	queueNames := make([]string, 0)
-	for id, queue := range p.connections {
-		if expireTime.Add(time.Duration(-30) * time.Second).After(queue.LastModified()) {
-			if err := queue.Remove(); err != nil {
-				return nil, err
+	for _, queues := range p.connections {
+		for id, queue := range queues {
+			if expireTime.Add(time.Duration(-30) * time.Second).After(queue.LastModified()) {
+				if err := queue.Remove(); err != nil {
+					return nil, err
+				}
+				queueNames = append(queueNames, queue.Name())
+				delete(p.connections, id)
 			}
-			queueNames = append(queueNames, queue.Name())
-			delete(p.connections, id)
 		}
 	}
 
 	return queueNames, nil
 }
 
-func (p *Publisher) GetQueueByUser(userID string) (*InvitationQueue) {
-	queue, ok := p.connections[userID]
+func (p *Publisher) GetQueueByUser(userID string, queueName string) *InvitationQueue {
+	queues, ok := p.connections[userID]
 
 	if !ok {
 		return nil
 	}
 
-	return queue
+	return queues[queueName]
 }
- 

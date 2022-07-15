@@ -1,14 +1,13 @@
 package publisher
 
 import (
-	"broker/core/config"
 	"broker/core/dto"
 	"broker/core/models"
-	"broker/pkg/utils"
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 )
 
@@ -26,10 +25,7 @@ func NewInvitationQueue(userID string, connection amqp.Connection) (*InvitationQ
 		return nil, err
 	}
 
-	queueName := fmt.Sprintf(
-		"%s.%s",
-		getPrefix(),
-		utils.CryptString(userID, config.GetConfig().AMQP.QueueHashSalt))
+	queueName := uuid.New().String()
 
 	exchangeName := getExchangePrefix()
 

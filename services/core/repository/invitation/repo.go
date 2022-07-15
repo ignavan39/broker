@@ -112,7 +112,7 @@ func (r *Repository) CreateInvitation(senderID string, workspaceID string, recip
 		RunWith(r.pool.Read()).
 		PlaceholderFormat(sq.Dollar).
 		QueryRow()
-	
+
 	if err := row.Scan(&invitation.Workspace.ID, &invitation.Workspace.Name,
 		&invitation.Workspace.CreatedAt, &invitation.Workspace.IsPrivate); err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (r *Repository) CreateInvitation(senderID string, workspaceID string, recip
 		return nil, err
 	}
 
-	row = sq.Select("name", "created_at", "is_private",)
+	row = sq.Select("name", "created_at", "is_private")
 
 	row = sq.Insert("invitations").
 		Columns("sender_id", "recipient_email", "workspace_id", "code, system_status").

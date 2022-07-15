@@ -147,7 +147,7 @@ func (s *InvitationService) SendInvitation(ctx context.Context, payload dto.Send
 		CreatedAt:      invitation.CreatedAt,
 		Sender:         invitation.Sender,
 		RecipientEmail: invitation.RecipientEmail,
-		Workspace:    invitation.Workspace,
+		Workspace:      invitation.Workspace,
 		Status:         invitation.Status,
 		SystemStatus:   invitation.SystemStatus,
 		Code:           invitation.Code,
@@ -188,7 +188,7 @@ func (s *InvitationService) CancelInvitation(senderID string, invitationID strin
 		CreatedAt:      invitation.CreatedAt,
 		RecipientEmail: invitation.RecipientEmail,
 		Sender:         invitation.Sender,
-		Workspace:    invitation.Workspace,
+		Workspace:      invitation.Workspace,
 		Status:         invitation.Status,
 		SystemStatus:   invitation.SystemStatus,
 		Code:           invitation.Code,
@@ -214,7 +214,7 @@ func (s *InvitationService) RejectInvitation(payload dto.RejectInvitationPayload
 
 	return nil
 }
- 
+
 func (s *InvitationService) clearExpiredInvitations(duration time.Duration) error {
 	err := s.invitationRepository.DeleteExpiredInvitations(duration)
 
