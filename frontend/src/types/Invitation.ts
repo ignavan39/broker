@@ -18,7 +18,7 @@ export type Invitation = {
     id: string,
     workspace: WorkspaceListItem
     senderId: string,
-    status: InvitationStatus, 
-    systemStatus: SystemStatus,
+    status: InvitationStatus | null, 
+    systemStatus: SystemStatus | null,
     createdAt: string,
 }

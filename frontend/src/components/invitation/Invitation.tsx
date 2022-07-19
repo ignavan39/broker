@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
@@ -67,6 +67,24 @@ const Button = styled.button`
 export const Invitation = () => {
   const [err, setErr] = useRecoilState(errorState);
 
+  const [connection, setConnection] = useState<{
+    queueName: string;
+    exchange: string;
+    host: string;
+    port: number | null;
+    user: string;
+    vhost: string;
+    password: string;
+  }>({
+    queueName: "",
+    exchange: "",
+    host: "",
+    port: null,
+    user: "",
+    vhost: "",
+    password: "",
+  });
+
   const navigate = useNavigate();
 
   const splits = window.location.href.split("/");
@@ -76,8 +94,17 @@ export const Invitation = () => {
     (async () => {
       try {
         const response = await connectionService.connect();
-        console.log(response);
-        connectionService.getData(code, response.host, response.port, response.queueName);
+        setConnection({
+          queueName: response.queueName,
+          exchange: response.exchange,
+          host: response.host,
+          port: response.port,
+          user: response.user,
+          vhost: response.vhost,
+          password: response.password,
+        })
+        console.log(connection);
+        connectionService.getData(code, connection.host, connection.port, connection.queueName);
       } catch (e) {
         const message = e instanceof Error ? e.message : "unknown error";
         setErr(message);

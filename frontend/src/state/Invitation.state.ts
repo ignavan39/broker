@@ -6,10 +6,15 @@ const getDefaultInvitation = () => {
     if (!cache) {
         return {
             id: "",
-            workspaceId: "",
+            workspace: {
+                id: "",
+                name: "",
+                isPrivate: null,
+                createdAt: null,
+            },
             senderId: "",
-            status: "", 
-            systemStatus: "",
+            status: null, 
+            systemStatus: null,
             createdAt: "",
         }
     } else {

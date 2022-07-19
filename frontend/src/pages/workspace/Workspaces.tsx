@@ -84,7 +84,10 @@ export const Workspaces = () => {
     e.preventDefault();
     try {
       let response = await workspaceService.create(state.name, state.isPrivate);
-      setWorkspaces([...workspaces, response].sort((p,n)=> p.createdAt < n.createdAt ? 1 : 0));
+      setWorkspaces([...workspaces, response].sort((p,n)=> p.createdAt 
+                                                      ? n.createdAt
+                                                      ? p.createdAt < n.createdAt 
+                                                      ? 1 : 0 : 0 : 0));
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
       setErr(message);

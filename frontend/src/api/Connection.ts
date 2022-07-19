@@ -1,5 +1,4 @@
 import axios from "axios";
-import mqtt from "mqtt";
 import { Host } from "../config";
 
 export type GetInvitationResponse = {
@@ -18,7 +17,7 @@ export type GetInvitationResponse = {
 
 export type ConnectResponse = {
     queueName: string,
-    exchangeName: string,
+    exchange: string,
     host: string,
     port: number,
     user: string,
@@ -28,24 +27,20 @@ export type ConnectResponse = {
 
 export type ConnectionService = {
     connect: () => Promise<ConnectResponse>;
-    getData: (code: string, host: string, port: number, queueName: string) => Promise<void> | null;
+    getData: (code: string, host: string, port: number | null, queueName: string) => Promise<void> | null;
 }
 
 export const connectionService: ConnectionService = {
     connect: async (): Promise<ConnectResponse> => {
         const url = Host + "/invitations/connect";
         const apiResponse = await axios.post<ConnectResponse>(url);
-
         return apiResponse.data
     },
-    getData: async (code: string, host: string, port: number, queueName: string): Promise<void> => {
-        const url = host + ":" + port + "/ws";
-
-        const options = {
-            clean: true, 
-        }
-
-        const client = mqtt.connect(url, options)
+    getData: async (code: string, host: string, port: number | null, queueName: string): Promise<void> => {
+        const mqtt = require('mqtt/dist/mqtt');
+        const url = "ws://" + host + ":" + port;
+        
+        const client = mqtt.connect(url)
 
         client.on('connect', () => {
             console.log("Connected");

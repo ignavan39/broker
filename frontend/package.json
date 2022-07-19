@@ -14,6 +14,7 @@
     "cross-env": "^7.0.3",
     "mqtt": "^4.3.7",
     "nvm": "^0.0.4",
+    "precompiled-mqtt": "^4.3.13",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-router": "^6.3.0",
