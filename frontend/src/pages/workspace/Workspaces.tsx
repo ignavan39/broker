@@ -7,6 +7,7 @@ import { WorkspaceItem } from "../../components/workspace/Workspace";
 import { workspaceService } from "../../api/Workspace";
 import { useRecoilState } from "recoil";
 import { errorState } from "../../state/Error.state";
+import { connectionService } from "../../api/Connection";
 
 const Container = styled.div`
   display: flex;
@@ -71,6 +72,10 @@ export const Workspaces = () => {
   );
   const [err, setErr] = useRecoilState(errorState);
   const [state, setState] = useState({ name: "", isPrivate: false });
+
+  setInterval(() => {
+    connectionService.ping();
+  }, 5000);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();

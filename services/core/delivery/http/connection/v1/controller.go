@@ -1,4 +1,4 @@
-package delivery
+package connection
 
 import (
 	"broker/core/delivery/http/middleware"

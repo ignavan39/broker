@@ -75,6 +75,7 @@ export const Invitation = () => {
   useEffect(() => {
     (async () => {
       try {
+        console.log("useEffect");
         const response = await connectionService.connect();
         
         const invitation = await connectionService.getData(code, response.consume.host,

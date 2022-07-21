@@ -7,6 +7,7 @@ import { useState } from "react";
 import { User } from "../../types/User";
 import { authorizationService } from "../../api";
 import axios, { AxiosError } from "axios";
+import { connectionService } from "../../api/Connection";
 
 const Container = styled.div`
   display: flex;

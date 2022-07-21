@@ -227,7 +227,6 @@ func (s *InvitationService) clearExpiredInvitations(duration time.Duration) erro
 
 func (s *InvitationService) Connect(ctx context.Context, userID string) (*dto.ConnectInvitationResponse, error) {
 	queue, err := s.publisher.CreateConnection(ctx, userID)
-
 	if err != nil {
 		return nil, err
 	}

@@ -30,11 +30,16 @@ export type ConnectResponse = {
 }
 
 export type ConnectionService = {
+    ping: () => Promise<void>;
     connect: () => Promise<ConnectResponse>;
     getData: (code: string, host: string, port: number | null, queueName: string) => Promise<any> | null;
 }
 
 export const connectionService: ConnectionService = {
+    ping: async (): Promise<void> => {
+        const url = Host + "/connect/ping";
+        await axios.post(url);
+    },
     connect: async (): Promise<ConnectResponse> => {
         const url = Host + "/invitations/connect";
         const apiResponse = await axios.post<ConnectResponse>(url);
@@ -48,8 +53,10 @@ export const connectionService: ConnectionService = {
 
         client.subscribe(queueName, () => {
             console.log("Subscribed to " + queueName);
-            console.log(client);
         });
 
+        client.on('message', (topic, message) => {
+            console.log(message);
+        });
     }
 }
