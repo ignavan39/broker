@@ -83,6 +83,12 @@ func Init() error {
 		return fmt.Errorf("error for parsing AMQP_PORT :%s", err)
 	}
 
+	amqpExternalPort, err := strconv.ParseInt(os.Getenv("AMQP_EXTERNAL_PORT"), 10, 16)
+
+	if err != nil {
+		return fmt.Errorf("error for parsing AMQP_EXTERNAL_PORT :%s", err)
+	}
+
 	amqpConf := AMQPConfig{
 		Port:             int(amqpPort),
 		Host:             os.Getenv("AMQP_HOST"),
@@ -91,6 +97,8 @@ func Init() error {
 		Vhost:            os.Getenv("AMQP_VHOST"),
 		ExternalUser:     os.Getenv("AMQP_EXTERNAL_USER"),
 		ExternalPassword: os.Getenv("AMQP_EXTERNAL_PASS"),
+		ExternalHost:     os.Getenv("AMQP_EXTERNAL_HOST"),
+		ExternalPort:     int(amqpExternalPort),
 		QueueHashSalt:    os.Getenv("QUEUE_HASH_SALT"),
 	}
 

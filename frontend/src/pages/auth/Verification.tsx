@@ -96,10 +96,6 @@ export const Verification = () => {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      if (!state.code) {
-        throw new Error("Invalid Invitation Code");
-      }
-
       const apiResponse = await authorizationService.signUp({
         password: user.user.password,
         email: user.user.email,
@@ -141,6 +137,8 @@ export const Verification = () => {
           <Input
             type={"code"}
             placeholder="code"
+            minLength={5}
+            maxLength={5}
             onInput={handleInput}
             value={state.code}
             name="code"

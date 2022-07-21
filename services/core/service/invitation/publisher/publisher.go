@@ -54,8 +54,8 @@ func (p *Publisher) CreateConnection(ctx context.Context, userID string) (*dto.C
 	config := config.GetConfig().AMQP
 	return &dto.ConnectInvitationResponse{
 		Consume: dto.CreateConnectionBase{
-			Host:     config.Host,
-			Port:     config.Port,
+			Host:     config.ExternalHost,
+			Port:     config.ExternalPort,
 			User:     config.ExternalUser,
 			Password: config.ExternalPassword,
 			Vhost:    config.Vhost,
