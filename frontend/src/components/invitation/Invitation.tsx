@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { Button } from "@mui/material";
+import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
 import { connectionService } from "../../api/Connection";
 import { invitationService } from "../../api/Invitation";
 import { errorState } from "../../state/Error.state";
-import { userState } from "../../state/User.state";
 
 const Container = styled.div`
   display: flex;
@@ -46,24 +46,6 @@ const FormButton = styled.div`
   margin: 0.2rem 0;
 `;
 
-const Button = styled.button`
-  background-color: #4caf50;
-  border: none;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  min-width: 9rem;
-  margin: 0.2rem 1rem;
-  min-height: 1rem;
-  border-radius: 10px;
-  &:hover {
-    background-color: #4aaf90;
-  }
-`;
-
 export const Invitation = () => {
   const [err, setErr] = useRecoilState(errorState);
 
@@ -75,12 +57,8 @@ export const Invitation = () => {
   useEffect(() => {
     (async () => {
       try {
-        console.log("useEffect");
         const response = await connectionService.connect();
-        
-        const invitation = await connectionService.getData(code, response.consume.host,
-                                                           response.consume.port, 
-                                                           response.consume.queueName);
+        connectionService.getData(response.consume);
       } catch (e) {
         const message = e instanceof Error ? e.message : "unknown error";
         setErr(message);

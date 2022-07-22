@@ -9,7 +9,7 @@ export type User = {
       expireAt: number | null;
     };
   };
-  user : {
+  profile : {
     firstName: string;
     lastName: string;
     email: string;

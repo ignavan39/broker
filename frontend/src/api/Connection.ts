@@ -1,8 +1,7 @@
 import axios from "axios";
-import { MqttClient } from "mqtt";
-import { json } from "stream/consumers";
 import { Host } from "../config";
-import { Invitation, InvitationStatus, SystemStatus } from "../types/Invitation";
+import { InvitationStatus, SystemStatus } from "../types/Invitation";
+const mqtt = require("precompiled-mqtt");
 
 export type GetInvitationResponse = {
     id: string,
@@ -33,7 +32,7 @@ export type ConnectResponse = {
 export type ConnectionService = {
     ping: () => Promise<void>;
     connect: () => Promise<ConnectResponse>;
-    getData: <T> (code: string, host: string, port: number | null, queueName: string) => Promise<T | null> | null;
+    getData:(credential: ConnectResponse['consume']) => void;
 }
 
 export const connectionService: ConnectionService = {
@@ -46,23 +45,23 @@ export const connectionService: ConnectionService = {
         const apiResponse = await axios.post<ConnectResponse>(url);
         return apiResponse.data;
     },
-    getData: async <T> (code: string, host: string, port: number | null, queueName: string): Promise<T | null> => {
-        const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary');
-        
-        const mqtt = require('mqtt/dist/mqtt');
-        const url = "http://" + host + ":" + port + "/ws";
-        
-        const client = mqtt.connect(url) as MqttClient;
+    getData: async (credential: ConnectResponse['consume']) => {
+        const {user,password,port,host,queueName} = credential
+        const client = mqtt.connect({
+            port,
+            host,
+            username: user,
+            password,
+        })
 
         let data = null;
 
         client.subscribe(queueName, () => {
             console.log("Subscribed to " + queueName);
-            client.on('message', (topic, message) => {
-                data = JSON.parse(decode(message.toLocaleString())) as T
+            client.on('message', (topic: any, message: any) => {
+                data = JSON.parse(message.buffer.toString());
+                console.log(data)
             });
         });
-
-        return Promise.resolve(data);
     }
 }

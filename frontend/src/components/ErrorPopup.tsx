@@ -1,24 +1,7 @@
+import { Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import { SetterOrUpdater } from "recoil";
 import styled from "styled-components";
-
-const Button = styled.button`
-  background-color: #8a8a8a;
-  border: none;
-  color: white;
-  padding: 1rem 1rem;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: start;
-  font-size: 1rem;
-  min-width: 2rem;
-  margin: 0.2rem 0;
-  border-radius: 10px;
-  &:hover {
-    background-color: #ff2626;
-  }
-`;
 
 const ErrorContainer = styled.div`
   height: 10rem;

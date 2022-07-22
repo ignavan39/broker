@@ -8,6 +8,7 @@ import { User } from "../../types/User";
 import { authorizationService } from "../../api";
 import axios, { AxiosError } from "axios";
 import { connectionService } from "../../api/Connection";
+import { Button, Input } from "@mui/material";
 
 const Container = styled.div`
   display: flex;
@@ -47,35 +48,6 @@ const Header = styled.div`
   background-color: #4caf50;
 `;
 
-const Button = styled.button`
-  background-color: #4caf50;
-  border: none;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  min-width: 9rem;
-  margin: 0.2rem 1rem;
-  min-height: 1rem;
-  border-radius: 10px;
-  &:hover {
-    background-color: #4aaf90;
-  }
-`;
-
-const Input = styled.input`
-  min-height: 3rem;
-  border: 1px solid #bdbdbd;
-  border-radius: 10px;
-  padding: 0 10px;
-  min-width: auto;
-  font-size: 16px;
-  text-align: center;
-  margin: 0.2rem 0;
-`;
-
 const FormButton = styled.div`
   display: flex;
   flex-direction: row;
@@ -98,18 +70,18 @@ export const Verification = () => {
     e.preventDefault();
     try {
       const apiResponse = await authorizationService.signUp({
-        password: user.user.password,
-        email: user.user.email,
+        password: user.profile.password,
+        email: user.profile.email,
         code: Number.parseInt(state.code),
-        lastName: user.user.lastName,
-        firstName: user.user.firstName,
-        nickname: user.user.nickname,
+        lastName: user.profile.lastName,
+        firstName: user.profile.firstName,
+        nickname: user.profile.nickname,
       });
       const updatedUser: User = {
         ...apiResponse,
-        user: {
-          ...apiResponse.user,
-          password: user.user.password,
+        profile: {
+          ...apiResponse.profile,
+          password: user.profile.password,
         },
       };
       setUser(updatedUser);
@@ -138,8 +110,6 @@ export const Verification = () => {
           <Input
             type={"code"}
             placeholder="code"
-            minLength={5}
-            maxLength={5}
             onInput={handleInput}
             value={state.code}
             name="code"

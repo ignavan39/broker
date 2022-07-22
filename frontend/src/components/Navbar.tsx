@@ -1,3 +1,4 @@
+import { Button } from "@mui/material";
 import { useNavigate } from "react-router";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
@@ -37,24 +38,6 @@ const Avatar = styled.div`
   margin: 0.1rem 0.5rem;
 `;
 
-const Logout = styled.button`
-  background-color: #8a8a8a;
-  border: none;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: start;
-  font-size: 18px;
-  min-width: 2rem;
-  margin: 0.2rem 2rem;
-  height: 70%;
-  border-radius: 10px;
-  &:hover {
-    background-color: #ff2626;
-  }
-`;
 
 export const Navbar = () => {
   const [user, setUser] = useRecoilState(userState);
@@ -83,17 +66,17 @@ export const Navbar = () => {
         <Avatar>
           <img
             src={
-              user.user.avatarUrl && user.user.avatarUrl.length
-                ? user.user.avatarUrl
+              user.profile.avatarUrl && user.profile.avatarUrl.length
+                ? user.profile.avatarUrl
                 : "https://vk.com/images/camera_c.gif"
             }
             width="50"
             height="50"
           />
         </Avatar>
-        <div>{user.user.firstName + " " + user.user.lastName}</div>
+        <div>{user.profile.firstName + " " + user.profile.lastName}</div>
       </UserInfo>
-      <Logout onClick={logout}>Logout</Logout>
+      <Button onClick={logout}>Logout</Button>
     </Container>
   );
 };

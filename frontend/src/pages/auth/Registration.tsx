@@ -7,6 +7,7 @@ import { User } from "../../types/User";
 import { ErrorPopup } from "../../components/ErrorPopup";
 import { authorizationService } from "../../api";
 import { errorState } from "../../state/Error.state";
+import { Button, Input } from "@mui/material";
 const Container = styled.div`
   display: flex;
   justify-content: center;
@@ -44,36 +45,6 @@ const Header = styled.div`
   border-radius: 10px 10px 0 0;
   background-color: #4caf50;
 `;
-
-const Button = styled.button`
-  background-color: #4caf50;
-  border: none;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  min-width: 9rem;
-  margin: 0.2rem 1rem;
-  min-height: 1rem;
-  border-radius: 10px;
-  &:hover {
-    background-color: #4aaf90;
-  }
-`;
-
-const Input = styled.input`
-  min-height: 3rem;
-  border: 1px solid #bdbdbd;
-  border-radius: 10px;
-  padding: 0 10px;
-  min-width: auto;
-  font-size: 16px;
-  text-align: center;
-  margin: 0.2rem 0;
-`;
-
 const FormButton = styled.div`
   display: flex;
   flex-direction: row;
@@ -92,11 +63,11 @@ export const Registration = () => {
     lastName: string;
     nickname: string;
   }>({
-    password: user.user.password ?? "",
-    email: user.user.email ?? "",
-    firstName: user.user.firstName ?? "",
-    lastName: user.user.lastName ?? "",
-    nickname: user.user.nickname ?? "",
+    password: user.profile.password ?? "",
+    email: user.profile.email ?? "",
+    firstName: user.profile.firstName ?? "",
+    lastName: user.profile.lastName ?? "",
+    nickname: user.profile.nickname ?? "",
   });
   const navigate = useNavigate();
 
@@ -130,7 +101,7 @@ export const Registration = () => {
             expireAt: null,
           },
         },
-        user : {
+        profile : {
           ...state,
           avatarUrl: ""
         },
@@ -156,7 +127,6 @@ export const Registration = () => {
           />
           <Input
             type={"password"}
-            minLength={5}
             placeholder="password"
             onInput={handleInput}
             value={state.password}
@@ -164,7 +134,6 @@ export const Registration = () => {
           />
           <Input
             type={"text"}
-            minLength={1}
             placeholder="Nickname"
             onInput={handleInput}
             value={state.nickname}
@@ -172,7 +141,6 @@ export const Registration = () => {
           />
           <Input
             type={"text"}
-            minLength={1}
             placeholder="First Name"
             onInput={handleInput}
             value={state.firstName}
@@ -180,7 +148,6 @@ export const Registration = () => {
           />
           <Input
             type={"text"}
-            minLength={1}
             placeholder="Last Name"
             onInput={handleInput}
             value={state.lastName}

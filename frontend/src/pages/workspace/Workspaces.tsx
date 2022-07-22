@@ -8,6 +8,7 @@ import { workspaceService } from "../../api/Workspace";
 import { useRecoilState } from "recoil";
 import { errorState } from "../../state/Error.state";
 import { connectionService } from "../../api/Connection";
+import { Button, Input } from "@mui/material";
 
 const Container = styled.div`
   display: flex;
@@ -16,25 +17,6 @@ const Container = styled.div`
   width: 100vw;
   flex-direction: column;
   background-color: white;
-`;
-
-const Button = styled.button`
-  background-color: #8a8a8a;
-  border: none;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: start;
-  font-size: 18px;
-  min-width: 2rem;
-  margin: 0.2rem 2rem;
-  height: 1rem;
-  border-radius: 10px;
-  &:hover {
-    background-color: #ff2626;
-  }
 `;
 
 const WorkspaceListContainer = styled.div`
@@ -123,7 +105,7 @@ export const Workspaces = () => {
             value={state.name}
             name="name"
           ></input>
-          <input
+          <Input
             type={"checkbox"}
             placeholder="isPrivate"
             name="isPrivate"
@@ -131,7 +113,7 @@ export const Workspaces = () => {
               setState({ ...state, isPrivate: !!state.isPrivate });
             }}
             value={state.isPrivate.toString()}
-          ></input>
+          />
           <Button>Create</Button>
         </CreateWorkspaceContainer>
         <WorkspaceListContainer>

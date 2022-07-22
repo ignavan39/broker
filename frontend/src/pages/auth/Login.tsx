@@ -1,11 +1,9 @@
+import { Button, Input } from "@mui/material";
 import { useEffect, useState } from "react";
-import { render } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
 import { authorizationService } from "../../api";
-import { connectionService } from "../../api/Connection";
-import { ErrorPopup } from "../../components/ErrorPopup";
 import { errorState } from "../../state/Error.state";
 import { userState } from "../../state/User.state";
 import { User } from "../../types/User";
@@ -47,35 +45,6 @@ const Header = styled.div`
   background-color: #4caf50;
 `;
 
-const Button = styled.button`
-  background-color: #4caf50;
-  border: none;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  min-width: 9rem;
-  margin: 0.2rem 1rem;
-  min-height: 1rem;
-  border-radius: 10px;
-  &:hover {
-    background-color: #4aaf90;
-  }
-`;
-
-const Input = styled.input`
-  min-height: 3rem;
-  border: 1px solid #bdbdbd;
-  border-radius: 10px;
-  padding: 0 10px;
-  min-width: auto;
-  font-size: 16px;
-  text-align: center;
-  margin: 0.2rem 0;
-`;
-
 const FormButton = styled.div`
   display: flex;
   flex-direction: row;
@@ -88,8 +57,8 @@ export const Login = () => {
   const [err, setErr] = useRecoilState(errorState);
   const [user, setUser] = useRecoilState(userState);
   const [state, setState] = useState({
-    password: user.user.password ?? "",
-    email: user.user.email ?? "",
+    password: user.profile.password ?? "",
+    email: user.profile.email ?? "",
   });
   const navigate = useNavigate();
 
@@ -104,15 +73,15 @@ export const Login = () => {
   useEffect(() => {
     (async () => {
       try {
-        if (user.user.password.length && user.user.email.length) {
+        if (user.profile.password.length && user.profile.email.length) {
           const apiResponse = await authorizationService.signIn({
-            password: user.user.password,
-            email: user.user.email,
+            password: user.profile.password,
+            email: user.profile.email,
           });
           const updatedUser: User = {
             ...apiResponse,
-            user: {
-              ...apiResponse.user,
+            profile: {
+              ...apiResponse.profile,
               password: state.password,
             },
           };
@@ -136,8 +105,8 @@ export const Login = () => {
       });
       const updatedUser: User = {
         ...apiResponse,
-        user: {
-          ...apiResponse.user,
+        profile: {
+          ...apiResponse.profile,
           password: state.password,
         },
       };
@@ -164,7 +133,6 @@ export const Login = () => {
           />
           <Input
             type={"password"}
-            minLength={5}
             placeholder="password"
             onInput={handleInput}
             value={state.password}

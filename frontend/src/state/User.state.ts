@@ -16,7 +16,7 @@ const getDefaultUser = (): User => {
           expireAt : null,
         }
       },
-      user : {
+      profile : {
         firstName: "",
         lastName: "",
         email: "",
