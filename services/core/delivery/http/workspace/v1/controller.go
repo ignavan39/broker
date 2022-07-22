@@ -5,14 +5,13 @@ import (
 	"broker/core/dto"
 	"broker/core/service"
 	"broker/pkg/httpext"
+	"broker/pkg/logger"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -55,7 +54,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		blogger.Errorf("[WorkspaceController][Create] Error: %s", err)
+		logger.Logger.Errorf("[WorkspaceController][Create] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -70,7 +69,7 @@ func (c *Controller) GetManyByUser(w http.ResponseWriter, r *http.Request) {
 
 	res, err := c.workspaceService.GetManyByUserID(userID)
 	if err != nil {
-		blogger.Errorf("[WorkspaceController][GetManyByUser] Error: %s", err)
+		logger.Logger.Errorf("[WorkspaceController][GetManyByUser] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -96,7 +95,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Errorf("[WorkspaceController][Delete] Error: %s", err)
+		logger.Logger.Errorf("[WorkspaceController][Delete] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -134,7 +133,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Errorf("[WorkspaceController][Update] Error: %s", err)
+		logger.Logger.Errorf("[WorkspaceController][Update] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -161,7 +160,7 @@ func (c *Controller) GetWorkspaceInfo(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Errorf("[WorkspaceController][GetWorkspaceInfo] Error: %s", err)
+		logger.Logger.Errorf("[WorkspaceController][GetWorkspaceInfo] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -210,7 +209,7 @@ func (c *Controller) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		blogger.Errorf("[WorkspaceController][ChangeUserRole] Error: %s", err)
+		logger.Logger.Errorf("[WorkspaceController][ChangeUserRole] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -248,7 +247,7 @@ func (c *Controller) BanUser(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		blogger.Errorf("[WorkspaceController][BanUser] Error: %s", err)
+		logger.Logger.Errorf("[WorkspaceController][BanUser] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

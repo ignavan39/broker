@@ -114,12 +114,16 @@ func (p *SignInPayload) Validate() error {
 		return errors.New("password too short")
 	}
 
-	if p.Email == nil || !isCorrectEmail(*p.Email) {
-		return errors.New("email must be not empty string")
+	if p.Email == nil && p.Nickname == nil {
+		return errors.New("one of the string must be not empty")
 	}
 
-	if p.Nickname == nil || len(*p.Nickname) == 0 {
-		return errors.New("nickname must be not empty string")
+	if p.Email != nil && !isCorrectEmail(*p.Email) {
+		return errors.New("email invalid")
+	}
+
+	if p.Nickname != nil && len(*p.Nickname) == 0 {
+		return errors.New("nickname must be not empty")
 	}
 
 	return nil

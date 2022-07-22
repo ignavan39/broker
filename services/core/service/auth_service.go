@@ -17,5 +17,5 @@ type AuthService interface {
 	SignIn(payload dto.SignInPayload) (*dto.SignResponse, error)
 	SendVerifyCode(ctx context.Context, email string) error
 	Validate(jwtToken string) (*Claims, bool)
-	Refresh(jwtToken string)(*dto.SignResponse, error)
+	Refresh(jwtToken string) (*dto.SignResponse, error)
 }

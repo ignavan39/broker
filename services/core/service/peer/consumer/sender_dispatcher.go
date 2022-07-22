@@ -1,13 +1,12 @@
-package amqp
+package consumer
 
 import (
 	"broker/core/dto"
+	"broker/pkg/logger"
 	"errors"
 	"sync"
 
 	"github.com/streadway/amqp"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 var QueueNameAlreadyExist = errors.New("queue by peer already exist")
@@ -38,7 +37,7 @@ func (d *SenderDispatcher) AddQueue(senderID string, workspaceID string) (*Sende
 		queue, err := NewSenderQueue(senderID, workspaceID, d.connection)
 
 		if err != nil {
-			blogger.Infof("[SenderDispatcher][sender :%s] failed add queue %s", senderID, err.Error())
+			logger.Logger.Infof("[SenderDispatcher][sender :%s] failed add queue %s", senderID, err.Error())
 			return nil, err
 		}
 

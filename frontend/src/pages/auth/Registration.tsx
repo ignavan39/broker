@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
@@ -91,14 +91,12 @@ export const Registration = () => {
     firstName: string;
     lastName: string;
     nickname: string;
-    code: string;
   }>({
     password: user.user.password ?? "",
     email: user.user.email ?? "",
     firstName: user.user.firstName ?? "",
     lastName: user.user.lastName ?? "",
     nickname: user.user.nickname ?? "",
-    code: "",
   });
   const navigate = useNavigate();
 
@@ -113,27 +111,32 @@ export const Registration = () => {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      if (!state.code) {
-        throw new Error("Invalid Invitation Code");
+      if (!state.email) {
+        throw new Error("Invalid Email");
       }
-      const apiResponse = await authorizationService.signUp({
-        password: state.password,
+
+      await authorizationService.sendVerifyCode({
         email: state.email,
-        code: Number.parseInt(state.code),
-        lastName: state.lastName,
-        firstName: state.firstName,
-        nickname: state.nickname,
       });
-      const updatedUser: User = {
-        ...apiResponse,
-        user: {
-          ...apiResponse.user,
-          password: state.password,
+
+      setUser({
+        auth: {
+          access: {
+            token: "",
+            expireAt: null,
+          },
+          refresh: {
+            token: "",
+            expireAt: null,
+          },
         },
-      };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(apiResponse));
-      navigate("/");
+        user : {
+          ...state,
+          avatarUrl: ""
+        },
+      })
+
+      navigate("/verification")
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
       setErr(message);
@@ -183,26 +186,9 @@ export const Registration = () => {
             value={state.lastName}
             name="lastName"
           />
-
-          <Input
-            type={"text"}
-            minLength={1}
-            placeholder="code"
-            onInput={handleInput}
-            value={state.code}
-            name="code"
-          />
         </FormInput>
         <FormButton>
-          <Button>Submit</Button>
-          <Button
-            style={{ backgroundColor: "#ff9900" }}
-            onClick={() => {
-              navigate("/register");
-            }}
-          >
-            Registration
-          </Button>
+          <Button type="submit">Submit</Button>
         </FormButton>
       </Form>
     </Container>

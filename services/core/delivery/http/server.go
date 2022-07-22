@@ -1,13 +1,12 @@
 package delivery
 
 import (
+	"broker/pkg/logger"
 	"context"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/rs/cors"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Server struct {
@@ -48,6 +47,6 @@ func (a *Server) Stop() {
 	a.srv.Shutdown(context.Background())
 }
 func (a *Server) WaitForDone() error {
-	blogger.Info("Server has been started")
+	logger.Logger.Info("Server has been started")
 	return <-a.done
 }

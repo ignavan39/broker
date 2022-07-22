@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { render } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState } from "recoil";
 import styled from "styled-components";
 import { authorizationService } from "../../api";
+import { connectionService } from "../../api/Connection";
 import { ErrorPopup } from "../../components/ErrorPopup";
 import { errorState } from "../../state/Error.state";
 import { userState } from "../../state/User.state";
@@ -116,7 +118,7 @@ export const Login = () => {
           };
           setUser(updatedUser);
           localStorage.setItem("user", JSON.stringify(updatedUser));
-          navigate("/");
+          navigate("/workspaces");
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : "unknown error";
@@ -141,7 +143,8 @@ export const Login = () => {
       };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(apiResponse));
-      navigate("/");
+
+      navigate("/workspaces");
     } catch (e) {
       const message = e instanceof Error ? e.message : "unknown error";
       setErr(message);

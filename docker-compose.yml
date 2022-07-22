@@ -91,6 +91,7 @@ services:
       - 1883:1883
       - 5672:5672
       - 15672:15672
+      - 15675:15675
     networks:
       broker:
         ipv4_address: 171.4.4.20
@@ -118,6 +119,7 @@ services:
       - postgres
       - redis
       - rabbitmq
+      - broker-smtp
     build:
       context: .
       dockerfile: ./docker/core.dockerfile
@@ -131,7 +133,22 @@ services:
       broker:
         ipv4_address: 171.4.4.12
         aliases:
-          - app.broker.loc    
+          - core.broker.loc  
+
+  broker-smtp:
+    container_name: broker-smtp
+    build:
+      context: .
+      dockerfile: ./docker/smtp.dockerfile
+    ports:
+     - ${PORT:-8081}:80
+    env_file:
+      - ./services/smtp/.env
+    networks:
+      broker:
+        ipv4_address: 171.4.4.17
+        aliases:
+          - smtp.broker.loc    
 
 networks:
   broker:

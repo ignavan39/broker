@@ -38,11 +38,10 @@ export const userState = atom<User>({
   default: getDefaultUser(),
 });
 
-export const userIsLoggined = selector({
-  key: "isLoggined",
+export const userLoggedOn = selector({
+  key: "loggedOn",
   get: ({ get }) => {
     const user = get(userState);
-
     const now = new Date().getTime();
 
     return user?.auth.access.token?.length 

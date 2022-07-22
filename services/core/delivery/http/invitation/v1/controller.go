@@ -5,13 +5,12 @@ import (
 	"broker/core/dto"
 	"broker/core/service"
 	"broker/pkg/httpext"
+	"broker/pkg/logger"
 	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
-
-	blogger "github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -48,7 +47,7 @@ func (c *Controller) SendInvitation(w http.ResponseWriter, r *http.Request) {
 
 	userID := middleware.GetUserIdFromContext(ctx)
 
-	res, err := c.invitationService.CreateInvitation(payload, userID, workspaceID)
+	res, err := c.invitationService.SendInvitation(ctx, payload, userID, workspaceID)
 
 	if err != nil {
 		if errors.Is(err, service.DuplicateInvitationErr) {
@@ -59,7 +58,7 @@ func (c *Controller) SendInvitation(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Errorf("[InvitationController][SendInvitation] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][SendInvitation] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -86,7 +85,7 @@ func (c *Controller) GetInvitations(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		blogger.Errorf("[InvitationController][GetInvitations] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][GetInvitations] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -117,7 +116,7 @@ func (c *Controller) CancelInvitation(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		blogger.Errorf("[InvitationController][CancelInvitation] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][CancelInvitation] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -153,7 +152,54 @@ func (c *Controller) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		blogger.Errorf("[InvitationController][AcceptInvitation] Error: %s", err)
+		logger.Logger.Errorf("[InvitationController][AcceptInvitation] Error: %s", err)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.EmptyResponse(w, http.StatusOK)
+}
+
+func (c *Controller) Connect(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	res, err := c.invitationService.Connect(ctx, userID)
+
+	if err != nil {
+		logger.Logger.Errorf("[InvitationController][Connect] Error: %s", err)
+		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	httpext.JSON(w, res, http.StatusOK)
+}
+
+func (c *Controller) RejectInvitation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var payload dto.RejectInvitationPayload
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		httpext.AbortJSON(w, "failed decode payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := payload.Validate(); err != nil {
+		httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userID := middleware.GetUserIdFromContext(ctx)
+
+	err := c.invitationService.RejectInvitation(payload, userID)
+
+	if err != nil {
+		if errors.Is(err, service.InvitationNotFoundErr) {
+			httpext.AbortJSON(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		logger.Logger.Errorf("[InvitationController][RejectInvitation] Error: %s", err)
 		httpext.AbortJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

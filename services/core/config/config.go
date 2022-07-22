@@ -29,6 +29,8 @@ type AMQPConfig struct {
 	Pass             string `env:"AMQP_PASS" envDefault:"pass"`
 	ExternalUser     string `env:"AMQP_EXTERNAL_USER" envDefault:"user"`
 	ExternalPassword string `env:"AMQP_EXTERNAL_PASS" envDefault:"pass"`
+	ExternalHost     string `env:"AMQP_EXTERNAL_HOST" envDefault:"localhost"`
+	ExternalPort     int    `env:"AMQP_EXTERNAL_PORT" envDefault:"15675"`
 	Vhost            string `env:"AMQP_VHOST" envDefault:"/"`
 	QueueHashSalt    string `env:"QUEUE_HASH_SALT" envDefault:"super_secret"`
 }
@@ -38,6 +40,10 @@ type MailgunConfig struct {
 	Domain     string `env:"MAILGUN_DOMAIN"`
 	PublicKey  string `env:"MAILGUN_PUBLIC_KEY"`
 	Sender     string `env:"MAILGUN_SENDER"`
+}
+
+type FrontendConfig struct {
+	Host string `env:"FRONTEND_HOST" envDefault:"localhost:3000"`
 }
 
 type InvitationConfig struct {
@@ -51,6 +57,7 @@ type Config struct {
 	MailgunConfig MailgunConfig
 	AMQP          AMQPConfig
 	Redis         RedisConfig
+	Frontend      FrontendConfig
 	Invitation    InvitationConfig
 }
 
@@ -71,9 +78,17 @@ func Init() error {
 	}
 
 	amqpPort, err := strconv.ParseInt(os.Getenv("AMQP_PORT"), 10, 16)
+
 	if err != nil {
 		return fmt.Errorf("error for parsing AMQP_PORT :%s", err)
 	}
+
+	amqpExternalPort, err := strconv.ParseInt(os.Getenv("AMQP_EXTERNAL_PORT"), 10, 16)
+
+	if err != nil {
+		return fmt.Errorf("error for parsing AMQP_EXTERNAL_PORT :%s", err)
+	}
+
 	amqpConf := AMQPConfig{
 		Port:             int(amqpPort),
 		Host:             os.Getenv("AMQP_HOST"),
@@ -82,6 +97,8 @@ func Init() error {
 		Vhost:            os.Getenv("AMQP_VHOST"),
 		ExternalUser:     os.Getenv("AMQP_EXTERNAL_USER"),
 		ExternalPassword: os.Getenv("AMQP_EXTERNAL_PASS"),
+		ExternalHost:     os.Getenv("AMQP_EXTERNAL_HOST"),
+		ExternalPort:     int(amqpExternalPort),
 		QueueHashSalt:    os.Getenv("QUEUE_HASH_SALT"),
 	}
 
@@ -130,6 +147,10 @@ func Init() error {
 		DB:       int(redisDB),
 	}
 
+	frontend := FrontendConfig{
+		Host: os.Getenv("FRONTEND_HOST"),
+	}
+
 	invitationExpireDurationRaw := os.Getenv("INVITATION_EXPIRE_DURATION")
 	invitationExpireDuration, err := time.ParseDuration(invitationExpireDurationRaw)
 	if err != nil {
@@ -147,6 +168,7 @@ func Init() error {
 		MailgunConfig: mailgunConfig,
 		AMQP:          amqpConf,
 		Redis:         redis,
+		Frontend:      frontend,
 		Invitation:    invitation,
 	}
 	return nil
